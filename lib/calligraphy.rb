@@ -6,6 +6,8 @@ require 'calligraphy/xml/namespace'
 require 'calligraphy/xml/node'
 require 'calligraphy/xml/utils'
 
+require 'calligraphy/resource'
+
 require 'calligraphy/web_dav_request'
 
 module Calligraphy
