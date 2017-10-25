@@ -1,11 +1,7 @@
 module Calligraphy
   class Resource
     attr_accessor :contents
-
-    attr_reader :full_request_path
-    attr_reader :mount_point
-    attr_reader :request_body
-    attr_reader :request_path
+    attr_reader :full_request_path, :mount_point, :request_body, :request_path
 
     def initialize(resource: nil, req: nil, mount: nil)
       @full_request_path = req&.original_url
