@@ -8,6 +8,7 @@ require 'calligraphy/xml/utils'
 
 require 'calligraphy/utils'
 require 'calligraphy/resource'
+require 'calligraphy/file_resource'
 
 require 'calligraphy/web_dav_request'
 
