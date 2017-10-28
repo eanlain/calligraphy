@@ -11,6 +11,16 @@ require 'calligraphy/resource'
 require 'calligraphy/file_resource'
 
 require 'calligraphy/web_dav_request'
+require 'calligraphy/copy'
+require 'calligraphy/delete'
+require 'calligraphy/get'
+require 'calligraphy/lock'
+require 'calligraphy/mkcol'
+require 'calligraphy/move'
+require 'calligraphy/propfind'
+require 'calligraphy/proppatch'
+require 'calligraphy/put'
+require 'calligraphy/unlock'
 
 module Calligraphy
   DAV_NS = 'DAV:'
