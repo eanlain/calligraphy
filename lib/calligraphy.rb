@@ -14,7 +14,14 @@ require 'calligraphy/web_dav_request'
 
 module Calligraphy
   DAV_NS = 'DAV:'
+  DAV_NO_LOCK_REGEX = /DAV:no-lock/i
+  DAV_NOT_NO_LOCK_REGEX = /Not\s+<DAV:no-lock>/i
+  ETAG_IF_REGEX = /\[(.+?)\]/
+  LOCK_TOKEN_ANGLE_REGEX = /[<>]/
   LOCK_TOKEN_REGEX = /<(urn:uuid:.+?)>/
+  RESOURCE_REGEX = /^<+(.+?)>\s/
+  TAGGED_LIST_REGEX = /\)\s</
+  UNTAGGAGED_LIST_REGEX = /\)\s\(/
 
   mattr_accessor :allowed_methods
   @@allowed_methods = %w(
