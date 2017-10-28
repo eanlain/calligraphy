@@ -14,6 +14,7 @@ require 'calligraphy/web_dav_request'
 
 module Calligraphy
   DAV_NS = 'DAV:'
+  LOCK_TOKEN_REGEX = /<(urn:uuid:.+?)>/
 
   mattr_accessor :web_dav_actions
   @@web_dav_actions = %i(
