@@ -138,7 +138,7 @@ module Calligraphy::Rails
 
     def get(head: false)
       fresh_when(@resource, etag: @resource.etag) if @resource.readable?
-      
+
       Calligraphy::Get.new(web_dav_request).request(head: head)
     end
 

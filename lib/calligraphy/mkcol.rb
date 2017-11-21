@@ -7,7 +7,7 @@ module Calligraphy
 
       @resource.create_collection
       set_content_location_header
-      
+
       return :created
     end
 
