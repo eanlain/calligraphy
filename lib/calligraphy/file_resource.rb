@@ -4,10 +4,10 @@ module Calligraphy
   class FileResource < Resource
     include Calligraphy::Utils
 
-    def initialize(resource: nil, req: nil, mount: nil)
+    def initialize(resource: nil, req: nil, mount: nil, root_dir: Dir.pwd)
       super
 
-      @root_dir = Dir.pwd
+      @root_dir = root_dir || Dir.pwd
       @src_path = join_paths @root_dir, @request_path
 
       if exists?

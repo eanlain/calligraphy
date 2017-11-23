@@ -7,7 +7,7 @@ module Calligraphy
 
       if @resource.is_true? options[:overwrite]
         to_path = options[:destination].tap { |s| s.slice! @resource.mount_point }
-        to_resource = @resource.class.new resource: to_path, req: @request
+        to_resource = @resource.class.new resource: to_path, req: @request, root_dir: @resource.root_dir
 
         if to_resource.exists?
           to_resource.delete_collection

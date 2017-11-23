@@ -35,7 +35,8 @@ module Calligraphy::Rails
       end
 
       @resource_class = params[:resource_class]
-      @resource = @resource_class.new resource: resource_id, req: request
+      @resource_root_path = params[:resource_root_path]
+      @resource = @resource_class.new resource: resource_id, req: request, root_dir: @resource_root_path
     end
 
     def headers
