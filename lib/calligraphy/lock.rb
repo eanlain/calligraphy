@@ -14,7 +14,7 @@ module Calligraphy
         xml = xml_for body: body, node: 'lockinfo'
         return :bad_request if xml == :bad_request
 
-        lock_properties = @resource.lock xml, headers['Depth']
+        lock_properties = @resource.lock xml, @headers['Depth']
       end
 
       builder = xml_builder

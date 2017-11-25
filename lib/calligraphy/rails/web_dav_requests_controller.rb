@@ -39,12 +39,8 @@ module Calligraphy::Rails
       @resource = @resource_class.new resource: resource_id, req: request, root_dir: @resource_root_path
     end
 
-    def headers
-      request.headers
-    end
-
     def check_preconditions
-      return true unless headers['If'].present?
+      return true unless request.headers['If'].present?
 
       evaluate_if_header
     end
@@ -64,10 +60,10 @@ module Calligraphy::Rails
     end
 
     def get_if_conditions
-      lists = if headers['If'][0] == '<'
-        headers['If'].split Calligraphy::TAGGED_LIST_REGEX
+      lists = if request.headers['If'][0] == '<'
+        request.headers['If'].split Calligraphy::TAGGED_LIST_REGEX
       else
-        headers['If'].split Calligraphy::UNTAGGAGED_LIST_REGEX
+        request.headers['If'].split Calligraphy::UNTAGGAGED_LIST_REGEX
       end
 
       lists
@@ -110,7 +106,7 @@ module Calligraphy::Rails
         if target.locked?
           conditions_met = false unless target.lock_tokens&.include? conditions[:lock_token]
         else
-          conditions_met = false if target.locked_to_user? headers
+          conditions_met = false if target.locked_to_user? request.headers
         end
       end
 
@@ -129,7 +125,7 @@ module Calligraphy::Rails
     end
 
     def web_dav_request
-      { headers: headers, request: request, resource: @resource, response: response }
+      { headers: request.headers, request: request, resource: @resource, response: response }
     end
 
     def options
