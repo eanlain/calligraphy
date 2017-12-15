@@ -1,6 +1,7 @@
 module Calligraphy::Rails
   class WebDavRequestsController < ActionController::Base
     before_action :verify_resource_scope
+    before_action :authenticate_with_digest_authentiation
     before_action :set_resource
 
     def invoke_method
@@ -10,6 +11,8 @@ module Calligraphy::Rails
         if method == 'head'
           status = get head: true
         elsif Calligraphy.allowed_methods.include? method
+          set_resource_client_nonce(method) if Calligraphy.enable_digest_authentication
+
           status, body = send method
         else
           status = :method_not_allowed
@@ -25,6 +28,14 @@ module Calligraphy::Rails
 
     def verify_resource_scope
       head :forbidden if params[:resource].include? '..'
+    end
+
+    def authenticate_with_digest_authentiation
+      if Calligraphy.enable_digest_authentication
+        authenticate_or_request_with_http_digest do |username|
+          Calligraphy.digest_password_procedure.call(username)
+        end
+      end
     end
 
     def set_resource
@@ -181,6 +192,17 @@ module Calligraphy::Rails
       else
         render body: body, status: status
       end
+    end
+
+    def set_resource_client_nonce(method)
+      @resource.client_nonce = get_client_nonce
+    end
+
+    def get_client_nonce
+      auth_header = request.headers["HTTP_AUTHORIZATION"]
+
+      auth = ::ActionController::HttpAuthentication::Digest.decode_credentials auth_header
+      auth[:cnonce]
     end
   end
 end

@@ -1,6 +1,6 @@
 module Calligraphy
   class Resource
-    attr_accessor :contents, :updated_at
+    attr_accessor :client_nonce, :contents, :updated_at
     attr_reader :full_request_path, :mount_point, :request_body, :request_path, :root_dir
 
     def initialize(resource: nil, req: nil, mount: nil, root_dir: nil)

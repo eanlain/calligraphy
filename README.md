@@ -4,14 +4,14 @@ Calligraphy is a Web Distributed Authoring and Versioning (WebDAV) solution for 
 
 * Provides a framework for handling WebDAV requests (e.g. `PROPFIND`, `PROPPATCH`)
 * Allows you to extend WedDAV functionality to any type of resource
-* Passes 103/104 of the [Litmus](https://github.com/tolsen/litmus) tests (using `Calligraphy::FileResource`)
+* Passes all of the [Litmus](https://github.com/eanlain/litmus) tests (using `Calligraphy::FileResource` and digest authentication)
 
 ## Getting Started
 
 Add the following line to your Gemfile:
 
 ```ruby
-gem 'calligraphy'
+gem 'calligraphy', :git => 'https://github.com/eanlain/calligraphy'
 ```
 
 Then run `bundle install`

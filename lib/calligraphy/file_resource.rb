@@ -309,6 +309,7 @@ module Calligraphy
 
     def create_lock(properties, depth)
       @store.transaction do
+        @store[:lockcreator] = client_nonce
         @store[:lockdiscovery] = [] unless @store[:lockdiscovery].is_a? Array
         @store[:lockdepth] = depth
 
@@ -366,6 +367,7 @@ module Calligraphy
 
     def locking_ancestor?(ancestor_path, ancestors, headers=nil)
       ancestor_store_path = "#{ancestor_path}/#{ancestors[-1]}.pstore"
+      check_lock_creator = Calligraphy.enable_digest_authentication
       blocking_lock = false
       unlockable = true
 
@@ -381,6 +383,10 @@ module Calligraphy
           ancestor_store[:lockdiscovery]
         end
 
+        ancestor_lock_creator = ancestor_store.transaction(true) do
+          ancestor_store[:lockcreator]
+        end if check_lock_creator
+
         blocking_lock = obj_exists_and_is_not_type? obj: ancestor_lock, type: []
 
         if blocking_lock
@@ -392,7 +398,8 @@ module Calligraphy
             .each { |x| x }
             .map { |k, v| k[:locktoken].children[0].text }
 
-          unlockable = ancestor_lock_tokens.include? token
+          unlockable = ancestor_lock_tokens.include?(token) ||
+            (check_lock_creator && (ancestor_lock_creator == client_nonce))
         end
       end
 
@@ -463,6 +470,8 @@ module Calligraphy
 
     def remove_lock(token)
       @store.transaction do
+        @store.delete :lockcreator
+
         if @store[:lockdiscovery].length == 1
           @store.delete :lockdiscovery
         else

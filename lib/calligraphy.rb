@@ -38,6 +38,12 @@ module Calligraphy
     options head get put delete copy move mkcol propfind proppatch lock unlock
   )
 
+  mattr_accessor :digest_password_procedure
+  @@digest_password_procedure = Proc.new { |x| 'changeme!' }
+
+  mattr_accessor :enable_digest_authentication
+  @@enable_digest_authentication = false
+
   mattr_accessor :lock_timeout_period
   @@lock_timeout_period = 24 * 60 * 60
 
@@ -45,4 +51,8 @@ module Calligraphy
   @@web_dav_actions = %i(
     options get put delete copy move mkcol propfind proppatch lock unlock
   )
+
+  def self.configure
+    yield self
+  end
 end
