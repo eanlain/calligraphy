@@ -11,7 +11,7 @@ Calligraphy is a Web Distributed Authoring and Versioning (WebDAV) solution for 
 Add the following line to your Gemfile:
 
 ```ruby
-gem 'calligraphy', :git => 'https://github.com/eanlain/calligraphy'
+gem 'calligraphy'
 ```
 
 Then run `bundle install`
@@ -19,6 +19,7 @@ Then run `bundle install`
 Next, set up a `calligraphy_resource` route in `config/routes.rb` with a `resource_class`.
 
 ```ruby
+# config/routes.rb
 calligraphy_resource :webdav, resource_class: Calligraphy::FileResource
 ```
 
@@ -37,6 +38,14 @@ The above will create a route, `/webdav` that will be able to handle the followi
 * `UNLOCK`
 
 The routes will also use the `Calligraphy::FileResource`, enabling Rails to carry out WebDAV actions on files.
+Additionally, when using the `FileResource` class the resource root path (the location you'd like to serve files from) with the `resource_root_path` key:
+
+```ruby
+# config/routes.rb
+calligraphy_resource :webdav, resource_class: Calligraphy::FileResource, resource_root_path: '/home/webdav'
+```
+
+This will serve local files from `/home/webdav` on the server through the `/webdav` endpoint.
 
 ## Extensibility
 
