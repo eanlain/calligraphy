@@ -7,8 +7,8 @@ require 'calligraphy/xml/node'
 require 'calligraphy/xml/utils'
 
 require 'calligraphy/utils'
-require 'calligraphy/resource'
-require 'calligraphy/file_resource'
+require 'calligraphy/resource/resource'
+require 'calligraphy/resource/file_resource'
 
 require 'calligraphy/web_dav_request'
 require 'calligraphy/copy'

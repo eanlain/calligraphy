@@ -375,17 +375,19 @@ module Calligraphy
 
       if File.exist? ancestor_store_path
         ancestor_store = PStore.new ancestor_store_path
-        ancestor_lock_depth = ancestor_store.transaction(true) do
-          ancestor_store[:lockdepth]
-        end
 
-        ancestor_lock = ancestor_store.transaction(true) do
-          ancestor_store[:lockdiscovery]
-        end
+        ancestor_lock = nil
+        ancestor_lock_creator = nil
+        ancestor_lock_depth = nil
 
-        ancestor_lock_creator = ancestor_store.transaction(true) do
-          ancestor_store[:lockcreator]
-        end if check_lock_creator
+        ancestor_store.transaction(true) do
+          ancestor_lock = ancestor_store[:lockdiscovery]
+          ancestor_lock_depth = ancestor_store[:lockdepth]
+
+          if check_lock_creator
+            ancestor_lock_creator = ancestor_store[:lockcreator]
+          end
+        end
 
         blocking_lock = obj_exists_and_is_not_type? obj: ancestor_lock, type: []
 
@@ -456,7 +458,7 @@ module Calligraphy
 
       if File.exist? ancestor_store_path
         ancestor_store = PStore.new ancestor_store_path
-        ancestor_lock = ancestor_store.transaction(true) do
+        ancestor_lock = ancestor_store.transaction do
           ancestor_store[:lockdiscovery][-1][:timeout] = timeout_node
           ancestor_store[:lockdiscovery]
         end
