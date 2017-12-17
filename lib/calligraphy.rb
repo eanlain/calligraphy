@@ -35,11 +35,11 @@ module Calligraphy
   TAGGED_LIST_REGEX = /\)\s</
   UNTAGGAGED_LIST_REGEX = /\)\s\(/
 
-  # HTTP methods allowed by the WebDavRequestsController.
+  # HTTP methods allowed by the WebDavRequests controller.
   mattr_accessor :allowed_http_methods
   @@allowed_http_methods = %w(
-    options head get put delete copy
-    move mkcol propfind proppatch lock unlock
+    options get put delete copy move
+    mkcol propfind proppatch lock unlock
   )
 
   # Proc responsible for returning the user's password, API key,
@@ -53,15 +53,16 @@ module Calligraphy
   mattr_accessor :enable_digest_authentication
   @@enable_digest_authentication = false
 
-  # The realm used in HTTP Basic Authentication.
+  # The realm used in HTTP Digest Authentication.
   mattr_accessor :http_authentication_realm
   @@http_authentication_realm = 'Application'
 
   # Maximum lock lifetime in seconds.
   mattr_accessor :lock_timeout_period
-  @@lock_timeout_period = 24 * 60 * 60
+  @@lock_timeout_period = 86400
 
-  # The HTTP actions Calligraphy is responsible for handling.
+  # The HTTP actions Calligraphy uses to create mappings between WebDAV
+  # HTTP verbs and URLs and WebDAV controller actions.
   mattr_accessor :web_dav_actions
   @@web_dav_actions = %i(
     options get put delete copy move
@@ -69,7 +70,7 @@ module Calligraphy
   )
 
   # Default way to set up Calligraphy.
-  # Run `rails generate calligraphy_install` to generate a
+  # Run `rails generate calligraphy:install` to generate a
   # fresh initializer with all configuration values.
   def self.configure
     yield self

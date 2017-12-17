@@ -14,9 +14,17 @@ Add the following line to your Gemfile:
 gem 'calligraphy'
 ```
 
-Then run `bundle install`
+Then, run `bundle install`
 
-Next, set up a `calligraphy_resource` route in `config/routes.rb` with a `resource_class`.
+Next, run the generator:
+
+```ruby
+rails generate calligraphy:install
+```
+
+The generator will install an initializer which describes Calligraphy's configuration options.
+
+Finally, set up a `calligraphy_resource` route in `config/routes.rb` with a `resource_class`.
 
 ```ruby
 # config/routes.rb
