@@ -4,13 +4,16 @@ module Calligraphy::Rails
     before_action :authenticate_with_digest_authentiation
     before_action :set_resource
 
+    # Entry-point for all WebDAV requests. Handles checking and validating
+    # preconditions, directing of requests to the proper WebDAV action
+    # method, and composing responses to send back to the client.
     def invoke_method
       method = request.request_method.downcase
 
       if check_preconditions
         if method == 'head'
           status = get head: true
-        elsif Calligraphy.allowed_methods.include? method
+        elsif Calligraphy.allowed_http_methods.include? method
           set_resource_client_nonce(method) if Calligraphy.enable_digest_authentication
 
           status, body = send method
@@ -27,14 +30,16 @@ module Calligraphy::Rails
     private
 
     def verify_resource_scope
-      head :forbidden if params[:resource].include? '..'
+      head :forbidden if %w(. ..).any? { |seg| params[:resource].include? seg }
     end
 
     def authenticate_with_digest_authentiation
-      if Calligraphy.enable_digest_authentication
-        authenticate_or_request_with_http_digest do |username|
-          Calligraphy.digest_password_procedure.call(username)
-        end
+      return unless Calligraphy.enable_digest_authentication
+
+      realm = Calligraphy.http_authentication_realm
+
+      authenticate_or_request_with_http_digest(realm) do |username|
+        Calligraphy.digest_password_procedure.call(username)
       end
     end
 
@@ -58,8 +63,8 @@ module Calligraphy::Rails
 
     def evaluate_if_header
       conditions_met = false
-
       condition_lists = get_if_conditions
+
       condition_lists.each do |list|
         conditions = parse_preconditions list
 
