@@ -11,67 +11,67 @@ module Calligraphy
     end
 
     def ancestor_exist?
-      raise NotImplemented
+      raise NotImplementedError
     end
 
     def can_copy?(options)
-      raise NotImplemented
+      raise NotImplementedError
     end
 
     def collection?
-      raise NotImplemented
+      raise NotImplementedError
     end
 
     def copy(options)
-      raise NotImplemented
+      raise NotImplementedError
     end
 
     def create_collection
-      raise NotImplemented
+      raise NotImplementedError
     end
 
     def delete_collection
-      raise NotImplemented
+      raise NotImplementedError
     end
 
     def etag
-      raise NotImplemented
+      raise NotImplementedError
     end
 
     def exists?
-      raise NotImplemented
+      raise NotImplementedError
     end
 
     def lock(nodes, depth='infinity')
-      raise NotImplemented
+      raise NotImplementedError
     end
 
     def lock_is_exclusive?
-      raise NotImplemented
+      raise NotImplementedError
     end
 
     def lock_tokens
-      raise NotImplemented
+      raise NotImplementedError
     end
 
     def locked?
-      raise NotImplemented
+      raise NotImplementedError
     end
 
     def locked_to_user?(headers=nil)
-      raise NotImplemented
+      raise NotImplementedError
     end
 
     def propfind(nodes)
-      raise NotImplemented
+      raise NotImplementedError
     end
 
     def proppatch(nodes)
-      raise NotImplemented
+      raise NotImplementedError
     end
 
     def read
-      raise NotImplemented
+      raise NotImplementedError
     end
 
     def readable?
@@ -79,15 +79,15 @@ module Calligraphy
     end
 
     def refresh_lock
-      raise NotImplemented
+      raise NotImplementedError
     end
 
     def unlock(token)
-      raise NotImplemented
+      raise NotImplementedError
     end
 
     def write(contents=@request_body.to_s)
-      raise NotImplemented
+      raise NotImplementedError
     end
   end
 end
