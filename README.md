@@ -1,4 +1,4 @@
-# Calligraphy
+# Calligraphy [![Build Status](https://travis-ci.org/eanlain/calligraphy.svg?branch=master)](https://travis-ci.org/eanlain/calligraphy) [![Gem Version](https://badge.fury.io/rb/calligraphy.svg)](https://badge.fury.io/rb/calligraphy)
 
 Calligraphy is a Web Distributed Authoring and Versioning (WebDAV) solution for Rails that:
 
