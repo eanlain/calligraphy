@@ -14,15 +14,15 @@ namespace :litmus do
   tmp_dir = "#{Dir.pwd}/tmp"
   litmus_archive = "#{tmp_dir}/litmus-0.13.tar.gz"
 
-	desc "Fetch litmus test suite zip file"
-	task :fetch do
+  desc "Fetch litmus test suite zip file"
+  task :fetch do
     sh "mkdir tmp" unless File.directory? "#{tmp_dir}"
     sh "mkdir tmp/webdav" unless File.directory? "#{tmp_dir}/webdav"
 
     unless File.exist? litmus_archive
       sh "wget -O #{tmp_dir}/litmus-0.13.tar.gz https://github.com/eanlain/litmus/releases/download/v0.13/litmus-0.13.tar.gz"
     end
-	end
+  end
   CLEAN.include("tmp")
 
   task :unarchive => :fetch do
