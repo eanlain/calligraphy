@@ -25,6 +25,7 @@ namespace :litmus do
   end
   CLEAN.include("tmp")
 
+  desc "Unarchive litmus test suite zip file"
   task :unarchive => :fetch do
     unless File.directory? "#{Dir.pwd}/litmus-0.13"
       sh "tar -xvzf #{tmp_dir}/litmus-0.13.tar.gz"
@@ -32,6 +33,7 @@ namespace :litmus do
   end
   CLEAN.include("litmus-0.13")
 
+  desc "Configure litmus test suite"
   task :configure => :unarchive do
     unless File.exist? "litmus-0.13/configured"
       sh "cd litmus-0.13 && ./configure"
@@ -39,11 +41,13 @@ namespace :litmus do
     end
   end
 
+  desc "'make clean' litmus test suite"
   task :make_clean do
     sh "cd litmus-0.13 && make clean"
     sh "rm litmus-0.13/configured"
   end
 
+  desc "Run litmus test suite"
   task :run => :configure do
     sh "cd spec/dummy/ && rails server -d"
     puma_pid = `cat spec/dummy/tmp/pids/server.pid`
@@ -56,6 +60,7 @@ namespace :litmus do
       puts "!!!!! Failure encountered during litmus test suite !!!!!"
     end
 
+    sleep 1
     sh "kill #{puma_pid}"
     exit exit_code
   end
