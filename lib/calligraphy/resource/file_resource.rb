@@ -421,22 +421,70 @@ module Calligraphy
     def get_property(prop)
       case prop.name
       when 'creationdate'
-        prop.content = @stats[:created_at]
+        prop.content = creationdate
       when 'displayname'
-        prop.content = @name
+        prop.content = displayname
+      when 'getcontentlanguage'
+        prop.content = getcontentlanguage
       when 'getcontentlength'
-        prop.content = @stats[:size]
+        prop.content = getcontentlength
+      when 'getcontenttype'
+        prop.content = getcontenttype
+      when 'getetag'
+        prop.content = getetag
       when 'getlastmodified'
-        prop.content = @updated_at
-      when 'resourcetype'
-        prop.content = 'collection'
+        prop.content = getlastmodified
       when 'lockdiscovery'
         return get_lock_info
+      when 'resourcetype'
+        prop.content = resourcetype
+      when 'supportedlock'
+        prop.content = supportedlock
       else
         return get_custom_property prop.name
       end
 
       prop
+    end
+
+    def creationdate
+      @stats[:created_at]
+    end
+
+    def displayname
+      @name
+    end
+
+    def getcontentlanguage
+      nil
+    end
+
+    def getcontentlength
+      @stats[:size]
+    end
+
+    def getcontenttype
+      nil
+    end
+
+    def getetag
+      nil
+    end
+
+    def getlastmodified
+      @updated_at
+    end
+
+    def lockdiscovery
+      get_lock_info
+    end
+
+    def resourcetype
+      'collection'
+    end
+
+    def supportedlock
+      nil
     end
 
     def get_custom_property(prop)

@@ -89,5 +89,51 @@ module Calligraphy
     def write(contents=@request_body.to_s)
       raise NotImplementedError
     end
-  end
+
+    private
+
+    def creationdate
+      raise NotImplementedError
+    end
+
+    def displayname
+      raise NotImplementedError
+    end
+
+    def getcontentlanguage
+      raise NotImplementedError
+    end
+
+    def getcontentlength
+      raise NotImplementedError
+    end
+
+    def getcontenttype
+      raise NotImplementedError
+    end
+
+    def getetag
+      raise NotImplementedError
+    end
+
+    def getlastmodified
+      raise NotImplementedError
+    end
+
+    def lockdiscovery
+      raise NotImplementedError
+    end
+
+    def resourcetype
+      raise NotImplementedError
+    end
+
+    def supportedlock
+      raise NotImplementedError
+    end
+
+    def get_custom_property(prop)
+      raise NotImplementedError
+    end
+ end
 end
