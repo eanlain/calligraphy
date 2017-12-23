@@ -50,7 +50,7 @@ module Calligraphy::Rails
         params[:resource]
       end
 
-      @resource_class = params[:resource_class]
+      @resource_class = params[:resource_class] || Calligraphy::Resource
       @resource_root_path = params[:resource_root_path]
       @resource = @resource_class.new resource: resource_id, req: request, root_dir: @resource_root_path
     end
@@ -144,6 +144,17 @@ module Calligraphy::Rails
       { headers: request.headers, request: request, resource: @resource, response: response }
     end
 
+    def set_resource_client_nonce(method)
+      @resource.client_nonce = get_client_nonce
+    end
+
+    def get_client_nonce
+      auth_header = request.headers["HTTP_AUTHORIZATION"]
+
+      auth = ::ActionController::HttpAuthentication::Digest.decode_credentials auth_header
+      auth[:cnonce]
+    end
+
     def options
       response.headers['DAV'] = '1, 2, 3'
       :ok
@@ -197,17 +208,6 @@ module Calligraphy::Rails
       else
         render body: body, status: status
       end
-    end
-
-    def set_resource_client_nonce(method)
-      @resource.client_nonce = get_client_nonce
-    end
-
-    def get_client_nonce
-      auth_header = request.headers["HTTP_AUTHORIZATION"]
-
-      auth = ::ActionController::HttpAuthentication::Digest.decode_credentials auth_header
-      auth[:cnonce]
     end
   end
 end
