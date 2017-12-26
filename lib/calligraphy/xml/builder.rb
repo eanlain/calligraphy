@@ -101,6 +101,24 @@ module Calligraphy::XML
       xml.status status_message status
     end
 
+    def supportedlock(xml, property)
+      children = JSON.parse property.text, symbolize_names: true
+
+      xml[@dav_ns].supportedlock do
+        children.each do |child|
+          xml[@dav_ns].lockentry do
+            xml[@dav_ns].lockscope do
+              xml.text child[:lockentry][:lockscope]
+            end
+
+            xml[@dav_ns].locktype do
+              xml.text child[:lockentry][:locktype]
+            end
+          end
+        end
+      end
+    end
+
     # NOTE: `xml[@dav_ns].send timeout` results in Timeout being called, so
     # we have this timeout method for convenience
     def timeout(xml, property)
@@ -122,6 +140,8 @@ module Calligraphy::XML
         end
       elsif property.name == 'resourcetype'
         resourcetype xml, property
+      elsif property.name == 'supportedlock'
+        supportedlock xml, property
       elsif property.name == 'timeout'
         timeout xml, property
       elsif SUPPORTED_NS_TAGS.include? property.name

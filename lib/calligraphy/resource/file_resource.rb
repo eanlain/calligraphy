@@ -452,11 +452,11 @@ module Calligraphy
     end
 
     def displayname
-      @name
+      get_custom_property(:displayname) || @name
     end
 
     def getcontentlanguage
-      nil
+      get_custom_property(:contentlanguage)
     end
 
     def getcontentlength
@@ -464,11 +464,12 @@ module Calligraphy
     end
 
     def getcontenttype
-      nil
+      get_custom_property(:contenttype)
     end
 
     def getetag
-      nil
+      cache_key = ActiveSupport::Cache.expand_cache_key [@resource.etag, '']
+      "W/\"#{Digest::MD5.hexdigest(cache_key)}\""
     end
 
     def getlastmodified
@@ -480,11 +481,14 @@ module Calligraphy
     end
 
     def resourcetype
-      'collection'
+      'collection' if collection?
     end
 
     def supportedlock
-      nil
+      exclusive_write = lockentry_hash('exclusive', 'write')
+      shared_write = lockentry_hash('shared', 'write')
+
+      JSON.generate [exclusive_write, shared_write]
     end
 
     def get_custom_property(prop)

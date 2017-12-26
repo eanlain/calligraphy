@@ -34,5 +34,9 @@ module Calligraphy
     def extract_lock_token(if_header)
       if_header.scan(Calligraphy::LOCK_TOKEN_REGEX)&.flatten[0]
     end
+
+    def lockentry_hash(scope, type)
+      { lockentry: { lockscope: scope, locktype: type } }
+    end
   end
 end
