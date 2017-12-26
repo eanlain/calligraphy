@@ -50,6 +50,7 @@ namespace :litmus do
   desc "Run litmus test suite"
   task :run => :configure do
     sh "cd spec/dummy/ && rails server -d"
+    sleep 1
     puma_pid = `cat spec/dummy/tmp/pids/server.pid`
     exit_code = 0
 
@@ -60,7 +61,6 @@ namespace :litmus do
       puts "!!!!! Failure encountered during litmus test suite !!!!!"
     end
 
-    sleep 1
     sh "kill #{puma_pid}"
     exit exit_code
   end

@@ -127,7 +127,7 @@ module Calligraphy::Rails
       end
 
       if conditions[:etag]
-        validators = [@resource.etag, ""]
+        validators = [@resource.etag, '']
         conditions_met = false unless validate_etag validators, conditions[:etag]
       end
 
@@ -149,7 +149,7 @@ module Calligraphy::Rails
     end
 
     def get_client_nonce
-      auth_header = request.headers["HTTP_AUTHORIZATION"]
+      auth_header = request.headers['HTTP_AUTHORIZATION']
 
       auth = ::ActionController::HttpAuthentication::Digest.decode_credentials auth_header
       auth[:cnonce]
