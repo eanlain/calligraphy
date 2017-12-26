@@ -29,5 +29,12 @@ RSpec.describe 'Resource' do
         end
       end
     end
+
+    describe '#dav_compliance' do
+      it 'advertises full WebDAV compliance' do
+        resource = Calligraphy::Resource.new
+        expect(resource.dav_compliance).to eq('1, 2, 3')
+      end
+    end
   end
 end

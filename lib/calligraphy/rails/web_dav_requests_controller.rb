@@ -29,6 +29,7 @@ module Calligraphy::Rails
 
     private
 
+    # Prevent any request with `.` or `..` as part of the resource ID.
     def verify_resource_scope
       head :forbidden if %w(. ..).any? { |seg| params[:resource].include? seg }
     end
@@ -52,6 +53,7 @@ module Calligraphy::Rails
 
       @resource_class = params[:resource_class] || Calligraphy::Resource
       @resource_root_path = params[:resource_root_path]
+
       @resource = @resource_class.new resource: resource_id, req: request, root_dir: @resource_root_path
     end
 
@@ -137,6 +139,7 @@ module Calligraphy::Rails
 
     def validate_etag(etag_validators, validate_against)
       cache_key = ActiveSupport::Cache.expand_cache_key etag_validators
+
       "W/\"#{Digest::MD5.hexdigest(cache_key)}\"" == validate_against
     end
 
@@ -156,7 +159,8 @@ module Calligraphy::Rails
     end
 
     def options
-      response.headers['DAV'] = '1, 2, 3'
+      response.headers['DAV'] = @resource.dav_compliance
+
       :ok
     end
 

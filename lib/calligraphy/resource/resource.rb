@@ -30,6 +30,10 @@ module Calligraphy
       raise NotImplementedError
     end
 
+    def dav_compliance
+      '1, 2, 3'
+    end
+
     def delete_collection
       raise NotImplementedError
     end
