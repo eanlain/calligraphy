@@ -1,6 +1,11 @@
+# frozen_string_literal: true
+
 module Calligraphy
+  # Responsible for removing the lock identified by the lock token in the
+  # request header.
   class Unlock < WebDavRequest
-    def request
+    # Executes the WebDAV request for a particular resource.
+    def execute
       return :bad_request if @headers['Lock-Token'].nil?
 
       @resource.unlock lock_token_header
