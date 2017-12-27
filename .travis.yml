@@ -2,6 +2,10 @@ language: ruby
 rvm:
   - 2.3
   - 2.4
+  - 2.5
 script:
   - bundle exec rake spec
   - bundle exec rake litmus:run
+matrix:
+  allow_failures:
+    - rvm: 2.5
