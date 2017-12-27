@@ -1,11 +1,17 @@
+# frozen_string_literal: true
+
 module Calligraphy
+  # Responsible for retrieving whatever information is identified by the
+  # request.
   class Get < WebDavRequest
-    def request(head: false)
+    # Executes the WebDAV request for a particular resource.
+    def execute(head: false)
       if @resource.readable?
         return :ok if head
-        return :ok, @resource.read
+
+        [:ok, @resource.read]
       else
-        return :not_found
+        :not_found
       end
     end
   end

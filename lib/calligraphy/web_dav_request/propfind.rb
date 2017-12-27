@@ -1,8 +1,12 @@
+# frozen_string_literal: true
+
 module Calligraphy
+  # Responsible for retrieving properties defined on the resource.
   class Propfind < WebDavRequest
     include Calligraphy::XML::Utils
 
-    def request
+    # Executes the WebDAV request for a particular resource.
+    def execute
       xml = xml_for body: body, node: 'propfind'
       return :bad_request if xml == :bad_request
 
@@ -12,7 +16,8 @@ module Calligraphy
       xml_res = builder.propfind_res @resource.full_request_path, properties
 
       set_xml_content_type
-      return :multi_status, xml_res
+
+      [:multi_status, xml_res]
     end
   end
 end

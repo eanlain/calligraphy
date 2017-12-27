@@ -1,19 +1,24 @@
+# frozen_string_literal: true
+
 module Calligraphy
+  # Responsible for creating a duplicate of the source resource identified
+  # by the request to the destination resource identified by the URI in
+  # the Destination header.
   class Copy < WebDavRequest
-    def request
+    # Executes the WebDAV request for a particular resource.
+    def execute
       options = copy_move_options
       can_copy = @resource.can_copy? options
 
-      if can_copy[:ancestor_exist]
-        return :precondition_failed
-      else
+      unless can_copy[:can_copy]
+        return :precondition_failed if can_copy[:ancestor_exist]
         return :conflict
-      end unless can_copy[:can_copy]
+      end
 
       return :locked if can_copy[:locked]
 
       overwritten = @resource.copy options
-      return overwritten ? :no_content : :created
+      overwritten ? :no_content : :created
     end
 
     private
