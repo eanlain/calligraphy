@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Calligraphy.configure do |config|
   # The HTTP actions Calligraphy uses to create mappings between WebDAV
   # HTTP verbs and URLs and WebDAV controller actions.
