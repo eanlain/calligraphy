@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'calligraphy/rails/mapper'
 require 'calligraphy/rails/web_dav_methods'
 require 'calligraphy/rails/web_dav_preconditions'
@@ -24,6 +26,7 @@ require 'calligraphy/web_dav_request/proppatch'
 require 'calligraphy/web_dav_request/put'
 require 'calligraphy/web_dav_request/unlock'
 
+#:nodoc:
 module Calligraphy
   # Constants used throughout Calligraphy.
   DAV_NS = 'DAV:'
@@ -39,17 +42,17 @@ module Calligraphy
 
   # HTTP methods allowed by the WebDavRequests controller.
   mattr_accessor :allowed_http_methods
-  @@allowed_http_methods = %w(
+  @@allowed_http_methods = %w[
     options get put delete copy move
     mkcol propfind proppatch lock unlock
-  )
+  ]
 
   # Proc responsible for returning the user's password, API key,
   # or HA1 digest hash so that Rails can check user credentials.
   # Should be overridden to handle your particular application's
   # user and/or authentication setup.
   mattr_accessor :digest_password_procedure
-  @@digest_password_procedure = Proc.new { |username| 'changeme!' }
+  @@digest_password_procedure = proc { |_username| 'changeme!' }
 
   # If Digest Authentication is enabled by default.
   mattr_accessor :enable_digest_authentication
@@ -61,15 +64,15 @@ module Calligraphy
 
   # Maximum lock lifetime in seconds.
   mattr_accessor :lock_timeout_period
-  @@lock_timeout_period = 86400
+  @@lock_timeout_period = 86_400
 
   # The HTTP actions Calligraphy uses to create mappings between WebDAV
   # HTTP verbs and URLs and WebDAV controller actions.
   mattr_accessor :web_dav_actions
-  @@web_dav_actions = %i(
+  @@web_dav_actions = %i[
     options get put delete copy move
     mkcol propfind proppatch lock unlock
-  )
+  ]
 
   # Default way to set up Calligraphy.
   # Run `rails generate calligraphy:install` to generate a

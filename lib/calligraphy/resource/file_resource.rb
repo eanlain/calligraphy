@@ -26,7 +26,7 @@ module Calligraphy
     def can_copy?(options)
       copy_options = { can_copy: false, ancestor_exist: false, locked: false }
 
-      overwrite = is_true? options[:overwrite]
+      overwrite = true? options[:overwrite]
       destination = options[:destination].tap { |s| s.slice! @mount_point }
       copy_options[:ancestor_exist] = File.exist? parent_path(destination)
 
@@ -62,9 +62,10 @@ module Calligraphy
       File.directory? @src_path
     end
 
+    # Creates a duplicate of the resource in `options[:destination]`.
     def copy(options)
       destination = options[:destination].tap { |s| s.slice! @mount_point }
-      preserve_existing = is_false? options[:overwrite]
+      preserve_existing = false? options[:overwrite]
 
       to_path = join_paths @root_dir, destination
       to_path_exists = File.exist? to_path
