@@ -7,7 +7,7 @@ module Calligraphy
     def execute
       return :locked if @resource.locked_to_user? @headers
 
-      if @resource.is_true? options[:overwrite]
+      if @resource.true? options[:overwrite]
         previous_resource_existed = overwrite_destination
       end
 

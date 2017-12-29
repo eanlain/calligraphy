@@ -2,3 +2,17 @@ AllCops:
   TargetRubyVersion: 2.3
   Exclude:
     - 'spec/dummy/**/*'
+Metrics/ClassLength:
+  Exclude:
+    - 'lib/calligraphy/resource/resource.rb'
+Metrics/AbcSize:
+  Exclude:
+    - 'lib/calligraphy/rails/mapper.rb'
+Metrics/LineLength:
+  Exclude:
+    - 'lib/calligraphy/rails/mapper.rb'
+Metrics/MethodLength:
+  Exclude:
+    - 'lib/calligraphy/rails/mapper.rb'
+Style/ClassVars:
+  Enabled: False

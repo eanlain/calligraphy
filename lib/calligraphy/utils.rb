@@ -1,13 +1,16 @@
-module Calligraphy
-  module Utils
-    TRUE_VALUES = [true, 1, '1', 't', 'T', 'true', 'TRUE']
-    FALSE_VALUES = [false, 0, '0', 'f', 'F', 'false', 'FALSE']
+# frozen_string_literal: true
 
-    def is_true?(val)
+module Calligraphy
+  # Miscellaneous convenience methods.
+  module Utils
+    TRUE_VALUES = [true, 1, '1', 't', 'T', 'true', 'TRUE'].freeze
+    FALSE_VALUES = [false, 0, '0', 'f', 'F', 'false', 'FALSE'].freeze
+
+    def true?(val)
       TRUE_VALUES.include? val
     end
 
-    def is_false?(val)
+    def false?(val)
       FALSE_VALUES.include? val
     end
 
@@ -26,13 +29,14 @@ module Calligraphy
     def map_array_of_hashes(arr_hashes)
       [].tap do |output_array|
         arr_hashes.each do |hash|
-          output_array.push hash.map { |k, v| v }
+          output_array.push(hash.map { |_k, v| v })
         end
       end
     end
 
     def extract_lock_token(if_header)
-      if_header.scan(Calligraphy::LOCK_TOKEN_REGEX)&.flatten[0]
+      token = if_header.scan(Calligraphy::LOCK_TOKEN_REGEX)
+      token.flatten.first if token.is_a? Array
     end
 
     def lockentry_hash(scope, type)
