@@ -8,14 +8,14 @@ module Calligraphy
     # Executes the WebDAV request for a particular resource.
     def execute
       options = copy_move_options
-      can_copy = @resource.can_copy? options
+      copy_options = @resource.copy_options options
 
-      unless can_copy[:can_copy]
-        return :precondition_failed if can_copy[:ancestor_exist]
+      unless copy_options[:can_copy]
+        return :precondition_failed if copy_options[:ancestor_exist]
         return :conflict
       end
 
-      return :locked if can_copy[:locked]
+      return :locked if copy_options[:locked]
 
       overwritten = @resource.copy options
       overwritten ? :no_content : :created

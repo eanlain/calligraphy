@@ -1,10 +1,14 @@
 AllCops:
   TargetRubyVersion: 2.3
   Exclude:
-    - 'spec/dummy/**/*'
+    - 'spec/**/*'
+Metrics/BlockLength:
+  Exclude:
+    - 'Rakefile'
 Metrics/ClassLength:
   Exclude:
     - 'lib/calligraphy/resource/resource.rb'
+    - 'lib/calligraphy/resource/file_resource.rb'
 Metrics/AbcSize:
   Exclude:
     - 'lib/calligraphy/rails/mapper.rb'
