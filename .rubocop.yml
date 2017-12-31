@@ -16,3 +16,5 @@ Metrics/MethodLength:
     - 'lib/calligraphy/rails/mapper.rb'
 Style/ClassVars:
   Enabled: False
+Style/DocumentationMethod:
+  Enabled: True

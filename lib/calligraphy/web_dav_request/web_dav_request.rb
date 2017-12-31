@@ -11,6 +11,7 @@ module Calligraphy
     attr_accessor :resource, :response
     attr_reader :headers, :request
 
+    #:nodoc:
     def initialize(headers:, request:, response:, resource:)
       @headers = headers
       @request = request
