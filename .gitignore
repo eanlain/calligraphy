@@ -52,6 +52,7 @@ build-iPhoneSimulator/
 .rvmrc
 
 ## Dummy app
+/spec/dummy/db/*.sqlite3
 /spec/dummy/lib/
 /spec/dummy/log/
 /spec/dummy/tmp/
