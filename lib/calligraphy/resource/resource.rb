@@ -11,6 +11,7 @@ module Calligraphy
     attr_reader :full_request_path, :mount_point, :request_body, :request_path,
                 :root_dir
 
+    #:nodoc:
     def initialize(resource: nil, req: nil, mount: nil, root_dir: nil)
       @full_request_path = req&.original_url
       @mount_point = mount || req&.path&.tap { |s| s.slice! resource }

@@ -10,6 +10,7 @@ module Calligraphy
 
       desc 'Creates a Calligraphy initializer for your application'
 
+      #:nodoc:
       def copy_initializer
         template 'calligraphy.rb', 'config/initializers/calligraphy.rb'
       end

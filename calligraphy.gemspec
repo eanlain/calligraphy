@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
@@ -13,7 +15,7 @@ Gem::Specification.new do |s|
   s.homepage    = 'http://www.github.com/eanlain/calligraphy'
   s.license     = 'MIT'
 
-  s.required_ruby_version = ">= 2.3.0"
+  s.required_ruby_version = '>= 2.3.0'
 
   s.files       = Dir['lib/**/*', 'LICENSE', 'README.md']
   s.test_files  = Dir['spec/**/*']
