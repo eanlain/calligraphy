@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    calligraphy (0.2.1)
+    calligraphy (0.3.0)
       rails (~> 5.0)
 
 GEM
