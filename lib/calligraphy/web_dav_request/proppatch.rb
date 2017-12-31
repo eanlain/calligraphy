@@ -18,7 +18,8 @@ module Calligraphy
       actions = @resource.proppatch xml
 
       builder = xml_builder
-      xml_res = builder.proppatch_res @resource.full_request_path, actions
+      xml_res = builder.proppatch_response(@resource.full_request_path,
+                                           actions)
 
       set_xml_content_type
 

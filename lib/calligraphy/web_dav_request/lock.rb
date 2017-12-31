@@ -8,6 +8,7 @@ module Calligraphy
 
     attr_reader :resource_exists
 
+    #:nodoc:
     def initialize(headers:, request:, response:, resource:)
       super
 
@@ -59,7 +60,7 @@ module Calligraphy
 
     def build_response(lock_properties)
       builder = xml_builder
-      xml_res = builder.lock_res lock_properties
+      xml_res = builder.lock_response lock_properties
 
       lock_token = extract_lock_token lock_properties
       prepare_response_headers lock_token
