@@ -29,18 +29,22 @@ module Calligraphy
     end
 
     # Responsible for returning a boolean value indicating if the resource
-    # can be copied.
-    #
-    # Used in COPY and MOVE (which inherits from COPY) requests.
-    def can_copy?(_options)
-      raise NotImplementedError
-    end
-
-    # Responsible for returning a boolean value indicating if the resource
     # is a collection.
     #
     # Used in DELETE, MKCOL, MOVE, and PUT requests.
     def collection?
+      raise NotImplementedError
+    end
+
+    # Responsible for returning a hash with keys indicating if the resource
+    # can be copied, if an ancestor exists, or if the copy destinatin is
+    # locked.
+    #
+    # Return hash should contain `can_copy`, `ancestor_exist`, and `locked`
+    # keys with boolean values.
+    #
+    # Used in COPY and MOVE (which inherits from COPY) requests.
+    def copy_options(_options)
       raise NotImplementedError
     end
 

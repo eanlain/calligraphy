@@ -9,7 +9,7 @@ RSpec.describe 'Resource' do
       getetag getlastmodified lockdiscovery resourcetype supportedlock
     )
     resource_methods_with_inputs = %w(
-      can_copy? copy lock locked_to_user? propfind proppatch unlock write
+      copy copy_options lock locked_to_user? propfind proppatch unlock write
     )
 
     resource_methods_without_inputs.each do |method|

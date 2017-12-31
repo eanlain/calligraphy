@@ -1,13 +1,22 @@
+# frozen_string_literal: true
+
 require 'pstore'
 
 module Calligraphy
+  # Resource that's handles writing and deleting directories and files to disk.
   class FileResource < Resource
+    DAV_PROPERTY_METHODS = %w[
+      creationdate displayname getcontentlanguage getcontentlength
+      getcontenttype getetag getlastmodified lockdiscovery resourcetype
+      supportedlock
+    ].freeze
+
     include Calligraphy::Utils
 
+    #:nodoc:
     def initialize(resource: nil, req: nil, mount: nil, root_dir: Dir.pwd)
       super
 
-      @root_dir = root_dir || Dir.pwd
       @src_path = join_paths @root_dir, @request_path
 
       if exists?
@@ -19,91 +28,97 @@ module Calligraphy
       set_ancestors
     end
 
+    # Responsible for returning a boolean value indicating if an ancestor
+    # exists for the resource.
+    #
+    # Used in COPY and MKCOL requests.
     def ancestor_exist?
       File.exist? @ancestor_path
     end
 
-    def can_copy?(options)
-      copy_options = { can_copy: false, ancestor_exist: false, locked: false }
-
-      overwrite = true? options[:overwrite]
-      destination = options[:destination].tap { |s| s.slice! @mount_point }
-      copy_options[:ancestor_exist] = File.exist? parent_path(destination)
-
-      to_path = join_paths @root_dir, destination
-      to_path_exist = File.exist? to_path
-
-      copy_options[:locked] = if to_path_exist
-        if destination_locked? to_path
-          true
-        else
-          to_path_parent = split_and_pop(path: to_path).join '/'
-          common_ancestor = common_path_ancestors(to_path, @ancestors).first
-          to_path_ancestors = ancestors_from_path_to_ancestor to_path, common_ancestor
-
-          locking_ancestor? to_path_parent, to_path_ancestors
-        end
-      else
-        false
-      end
-
-      if copy_options[:ancestor_exist]
-        if !overwrite && to_path_exist
-          copy_options[:can_copy] = false
-        else
-          copy_options[:can_copy] = true
-        end
-      end
-
-      copy_options
-    end
-
+    # Responsible for returning a boolean value indicating if the resource
+    # is a collection.
+    #
+    # Used in DELETE, MKCOL, MOVE, and PUT requests.
     def collection?
       File.directory? @src_path
     end
 
-    # Creates a duplicate of the resource in `options[:destination]`.
-    def copy(options)
-      destination = options[:destination].tap { |s| s.slice! @mount_point }
-      preserve_existing = false? options[:overwrite]
+    # Responsible for returning a hash with keys indicating if the resource
+    # can be copied, if an ancestor exists, or if the copy destinatin is
+    # locked.
+    #
+    # Return hash should contain `can_copy`, `ancestor_exist`, and `locked`
+    # keys with boolean values.
+    #
+    # Used in COPY and MOVE (which inherits from COPY) requests.
+    def copy_options(options)
+      copy_options = { can_copy: false, ancestor_exist: false, locked: false }
 
+      destination = copy_destination options
       to_path = join_paths @root_dir, destination
       to_path_exists = File.exist? to_path
 
-      if collection?
-        FileUtils.cp_r @src_path, to_path, preserve: preserve_existing
-      else
-        FileUtils.cp @src_path, to_path, preserve: preserve_existing
-      end
+      copy_options[:ancestor_exist] = File.exist? parent_path destination
+      copy_options[:locked] = can_copy_locked_option to_path, to_path_exists
+      copy_options = can_copy_option copy_options, options, to_path_exists
+      copy_options
+    end
 
-      if store_exist? && preserve_existing
-        dest_store_path = collection? ? "#{to_path}/#{@name}" : to_path
-        dest_store_path += ".pstore"
+    # Responsible for creating a duplicate of the resource in
+    # `options[:destination]` (see section 9.8 of RFC4918).
+    #
+    # Used in COPY and MOVE (which inherits from COPY) requests.
+    def copy(options)
+      destination = copy_destination options
+      to_path = join_paths @root_dir, destination
+      to_path_exists = File.exist? to_path
 
-        FileUtils.cp @store_path, dest_store_path, preserve: preserve_existing
-      end
+      preserve_existing = false? options[:overwrite]
+
+      copy_resource_to_path to_path, preserve_existing
+      copy_pstore_to_path to_path, preserve_existing
 
       to_path_exists
     end
 
+    # Responsible for creating a new collection based on the resource (see
+    # section 9.3 of RFC4918).
+    #
+    # Used in MKCOL requests.
     def create_collection
       Dir.mkdir @src_path
     end
 
+    # Responsible for deleting a resource collection (see section 9.6 of
+    # RFC4918).
+    #
+    # Used in DELETE and MOVE requests.
     def delete_collection
       FileUtils.rm_r @src_path
       FileUtils.rm_r @store_path if store_exist?
     end
 
+    # Responsible for returning unique identifier used to create an etag.
+    #
+    # Used in precondition validation, as well as GET, HEAD, and PROPFIND
+    # requests.
     def etag
       [@updated_at.to_i, @stats[:inode], @stats[:size]].join('-').to_s
     end
 
+    # Responsible for indicating if the resource already exists.
+    #
+    # Used in DELETE, LOCK, MKCOL, and MOVE requests.
     def exists?
       File.exist? @src_path
     end
 
-    def lock(nodes, depth='infinity')
+    # Responsible for creating a lock on the resource (see section 9.10 of
+    # RFC4918).
+    #
+    # Used in LOCK requests.
+    def lock(nodes, depth = 'infinity')
       properties = {}
 
       nodes.each do |node|
@@ -111,30 +126,32 @@ module Calligraphy
         properties[node.name.to_sym] = node
       end
 
-      unless exists?
-        write ''
-        @name = File.basename @src_path
-        init_pstore
-      end
+      create_blank_file unless exists?
 
       create_lock properties, depth
+      fetch_lock_info
     end
 
+    # Responsible for indicating if a resource lock is exclusive.
+    #
+    # Used in LOCK requests.
     def lock_is_exclusive?
       lockscope == 'exclusive'
     end
 
-    def lock_tokens
-      get_lock_info
-      @lock_info&.each { |x| x }&.map { |k, v| k[:locktoken].children[0].text }
-    end
-
+    # Responsible for indicating if a resource is current locked.
+    #
+    # Used in LOCK requests.
     def locked?
-      get_lock_info
+      fetch_lock_info
+
       obj_exists_and_is_not_type? obj: @lock_info, type: []
     end
 
-    def locked_to_user?(headers=nil)
+    # Responsible for indicating if a resource is locked to the current user.
+    #
+    # Used in DELETE, LOCK, MOVE, PROPPATCH, and PUT requests.
+    def locked_to_user?(headers = nil)
       if locked?
         !can_unlock? headers
       else
@@ -142,6 +159,10 @@ module Calligraphy
       end
     end
 
+    # Responsible for handling the retrieval of properties defined on the
+    # resource (see section 9.1 of RFC4918).
+    #
+    # Used in PROPFIND requests.
     def propfind(nodes)
       properties = { found: [], not_found: [] }
 
@@ -151,96 +172,73 @@ module Calligraphy
 
           value = get_property prop
 
-          if value.nil?
-            properties[:not_found].push prop
-          elsif value.is_a? Hash
-            value.each_key do |key|
-              properties[:found].push value[key]
-            end
-          else
-            properties[:found].push value
-          end
+          update_found_properties properties, prop, value
         end
       end
 
       properties
     end
 
+    # Responsible for handling the addition and/or removal of properties
+    # defined on the resource through a PROPPATCH request (see section 9.2 of
+    # RFC4918).
+    #
+    # Used in PROPPATCH requests.
     def proppatch(nodes)
       actions = { set: [], remove: [] }
 
       @store.transaction do
         @store[:properties] = {} unless @store[:properties].is_a? Hash
 
-        nodes.each do |node|
-          if node.name == 'set'
-            node.children.each do |prop|
-              prop.children.each do |property|
-                prop_sym = property.name.to_sym
-                node = Calligraphy::XML::Node.new property
-
-                if @store[:properties][prop_sym]
-                  if @store[:properties][prop_sym].is_a? Array
-                    unless matching_namespace? @store[:properties][prop_sym], node
-                      @store[:properties][prop_sym].push node
-                    end
-                  else
-                    if !same_namespace? @store[:properties][prop_sym], node
-                      @store[:properties][prop_sym] = [@store[:properties][prop_sym]]
-                      @store[:properties][prop_sym].push node
-                    else
-                      @store[:properties][prop_sym] = node
-                    end
-                  end
-                else
-                  @store[:properties][prop_sym] = node
-                end
-
-                actions[:set].push property
-              end
-            end
-          elsif node.name == 'remove'
-            node.children.each do |prop|
-              prop.children.each do |property|
-                @store[:properties].delete property.name.to_sym
-
-                actions[:remove].push property
-              end
-            end
-          end
-        end
+        add_remove_properties nodes, actions
       end
 
       get_custom_property nil
       actions
     end
 
+    # Responsible for setting and returning the contents of a resource
+    # if it is readable (see section 9.4 of RFC4918).
+    #
+    # Used in GET requests.
     def read
       @contents ||= File.read @src_path if readable?
     end
 
+    # Responsible for refreshing locks (see section 9.10.2 of RFC4918).
+    #
+    # Used in LOCK requests.
     def refresh_lock
       if locked?
         @store.transaction do
           @store[:lockdiscovery][-1][:timeout] = timeout_node
         end
 
-        get_lock_info
+        fetch_lock_info
       else
         refresh_ancestor_locks @ancestor_path, @ancestors.dup
       end
     end
 
+    # Responsible for unlocking a resource lock (see section 9.11 of RFC4918).
+    #
+    # Used in UNLOCK requests.
     def unlock(token)
       if lock_tokens.include? token
         remove_lock token
+        @lock_info = nil
+
         :no_content
       else
         :forbidden
       end
     end
 
-    def write(contents=@request_body.to_s)
+    # Responsible for writing contents to a resource (see section 9.7 of
+    # RFC4918).
+    #
+    # Used in PUT requests.
+    def write(contents = @request_body.to_s)
       @contents = contents
 
       File.open(@src_path, 'w') do |file|
@@ -262,7 +260,7 @@ module Calligraphy
       @stats = {
         created_at: file_stats.ctime,
         inode: file_stats.ino,
-        size: file_stats.size,
+        size: file_stats.size
       }
       @updated_at = file_stats.mtime
     end
@@ -274,6 +272,34 @@ module Calligraphy
 
     def parent_path(path)
       join_paths @root_dir, split_and_pop(path: path)
+    end
+
+    def copy_destination(options)
+      options[:destination].tap { |s| s.slice! @mount_point }
+    end
+
+    def can_copy_locked_option(to_path, to_path_exists)
+      return false unless to_path_exists
+      return true if destination_locked? to_path
+
+      to_path_parent = split_and_pop(path: to_path).join '/'
+      common_ancestor = common_path_ancestors(to_path, @ancestors).first
+      to_path_ancestors = ancestors_from_path_to_ancestor(to_path,
+                                                          common_ancestor)
+
+      locking_ancestor? to_path_parent, to_path_ancestors
+    end
+
+    def can_copy_option(copy_options, options, to_path_exists)
+      return copy_options unless copy_options[:ancestor_exist]
+
+      copy_options[:can_copy] = if false?(options[:overwrite]) && to_path_exists
+                                  false
+                                else
+                                  true
+                                end
+
+      copy_options
     end
 
     def destination_locked?(path)
@@ -296,36 +322,51 @@ module Calligraphy
       path = split_and_pop path: path
       ancestors = []
 
-      until path.last == stop_at_ancestor
-        ancestors.push path.pop
-      end
-
+      ancestors.push path.pop until path.last == stop_at_ancestor
       ancestors.push stop_at_ancestor
       ancestors.reverse
+    end
+
+    def copy_resource_to_path(to_path, preserve_existing)
+      if collection?
+        FileUtils.cp_r @src_path, to_path, preserve: preserve_existing
+      else
+        FileUtils.cp @src_path, to_path, preserve: preserve_existing
+      end
+    end
+
+    def copy_pstore_to_path(to_path, preserve_existing)
+      return unless store_exist? && preserve_existing
+
+      dest_store_path = collection? ? "#{to_path}/#{@name}" : to_path
+      dest_store_path += '.pstore'
+
+      FileUtils.cp @store_path, dest_store_path, preserve: preserve_existing
     end
 
     def store_exist?
       File.exist? @store_path
     end
 
+    def create_blank_file
+      write ''
+      @name = File.basename @src_path
+      init_pstore
+    end
+
     def create_lock(properties, depth)
       @store.transaction do
         @store[:lockcreator] = client_nonce
-        @store[:lockdiscovery] = [] unless @store[:lockdiscovery].is_a? Array
         @store[:lockdepth] = depth
+        @store[:lockdiscovery] = [] unless @store[:lockdiscovery].is_a? Array
 
-        activelock = {}
-        activelock[:locktoken] = create_lock_token
-        activelock[:timeout] = timeout_node
+        @store[:lockdiscovery].push({}.tap do |activelock|
+          activelock[:locktoken] = create_lock_token
+          activelock[:timeout] = timeout_node
 
-        properties.each_key do |prop|
-          activelock[prop] = Calligraphy::XML::Node.new properties[prop]
-        end
-
-        @store[:lockdiscovery].push activelock
+          add_lock_properties activelock, properties
+        end)
       end
-
-      get_lock_info
     end
 
     def create_lock_token
@@ -347,7 +388,13 @@ module Calligraphy
       end
     end
 
-    def get_lock_info
+    def add_lock_properties(activelock, properties)
+      properties.each_key do |prop|
+        activelock[prop] = Calligraphy::XML::Node.new properties[prop]
+      end
+    end
+
+    def fetch_lock_info
       return nil if @store.nil?
 
       @lock_info = @store.transaction(true) { @store[:lockdiscovery] }
@@ -358,94 +405,109 @@ module Calligraphy
       @lock_info[-1][:lockscope].children[0].name
     end
 
-    def can_unlock?(headers=nil)
+    def can_unlock?(headers = nil)
       token = unless headers.nil?
-        extract_lock_token(headers['If']) if headers['If']
-      end
+                extract_lock_token(headers['If']) if headers['If']
+              end
 
       lock_tokens.include? token
     end
 
-    def locking_ancestor?(ancestor_path, ancestors, headers=nil)
+    def lock_tokens
+      fetch_lock_info
+      @lock_info&.each { |x| x }&.map { |k| k[:locktoken].children[0].text }
+    end
+
+    def locking_ancestor?(ancestor_path, ancestors, headers = nil)
+      ancestor_info = ancestor_lock_info headers
       ancestor_store_path = "#{ancestor_path}/#{ancestors[-1]}.pstore"
-      check_lock_creator = Calligraphy.enable_digest_authentication
-      blocking_lock = false
-      unlockable = true
 
       ancestors.pop
 
-      if File.exist? ancestor_store_path
-        ancestor_store = PStore.new ancestor_store_path
+      check_for_ancestor ancestor_info, ancestor_store_path
 
-        ancestor_lock = nil
-        ancestor_lock_creator = nil
-        ancestor_lock_depth = nil
+      if ancestor_info[:blocking] || ancestors.empty?
+        assign_locking_ancestor ancestor_info
 
-        ancestor_store.transaction(true) do
-          ancestor_lock = ancestor_store[:lockdiscovery]
-          ancestor_lock_depth = ancestor_store[:lockdepth]
-
-          if check_lock_creator
-            ancestor_lock_creator = ancestor_store[:lockcreator]
-          end
-        end
-
-        blocking_lock = obj_exists_and_is_not_type? obj: ancestor_lock, type: []
-
-        if blocking_lock
-          token = unless headers.nil?
-            extract_lock_token(headers['If']) if headers['If']
-          end
-
-          ancestor_lock_tokens = ancestor_lock
-            .each { |x| x }
-            .map { |k, v| k[:locktoken].children[0].text }
-
-          unlockable = ancestor_lock_tokens.include?(token) ||
-            (check_lock_creator && (ancestor_lock_creator == client_nonce))
-        end
-      end
-
-      if blocking_lock || ancestors.empty?
-        @locking_ancestor = {
-          depth: ancestor_lock_depth,
-          info: ancestor_lock
-        }
-
-        return unlockable ? false : true
+        return ancestor_info[:unlockable] ? false : true
       end
 
       next_ancestor = split_and_pop(path: ancestor_path).join '/'
-      locking_ancestor? next_ancestor, ancestors, headers
+      locking_ancestor? next_ancestor, ancestors, ancestor_info[:headers]
+    end
+
+    def ancestor_lock_info(headers)
+      {
+        blocking: false,
+        check_creator: Calligraphy.enable_digest_authentication,
+        creator: nil,
+        depth: nil,
+        headers: headers || nil,
+        lock: nil,
+        unlockable: true
+      }
+    end
+
+    def check_for_ancestor(ancestor_info, store_path)
+      return unless File.exist? store_path
+      ancestor_lock_from_store ancestor_info, store_path
+
+      ancestor_info[:blocking] = obj_exists_and_is_not_type?(
+        obj: ancestor_info[:lock],
+        type: []
+      )
+
+      blocking_lock_unlockable? ancestor_info if ancestor_info[:blocking]
+    end
+
+    def ancestor_lock_from_store(lock_info, store_path)
+      ancestor_store = PStore.new store_path
+
+      ancestor_store.transaction(true) do
+        lock_info[:lock] = ancestor_store[:lockdiscovery]
+        lock_info[:depth] = ancestor_store[:lockdepth]
+
+        if lock_info[:check_creator]
+          lock_info[:creator] = ancestor_store[:lockcreator]
+        end
+      end
+    end
+
+    def blocking_lock_unlockable?(lock_info)
+      headers = lock_info[:headers]
+
+      token = unless headers.nil?
+                extract_lock_token(headers['If']) if headers['If']
+              end
+
+      ancestor_tokens = lock_info[:lock]
+
+      lock_info[:unlockable] =
+        ancestor_tokens.include?(token) ||
+        (lock_info[:check_creator] && (lock_info[:creator] == client_nonce))
+    end
+
+    def ancestor_lock_tokens(lock_info)
+      lock_info[:lock].each { |x| x }.map { |k| k[:locktoken].children[0].text }
+    end
+
+    def assign_locking_ancestor(ancestor_info)
+      @locking_ancestor = {
+        depth: ancestor_info[:depth],
+        info: ancestor_info[:lock]
+      }
     end
 
     def get_property(prop)
       case prop.name
-      when 'creationdate'
-        prop.content = creationdate
-      when 'displayname'
-        prop.content = displayname
-      when 'getcontentlanguage'
-        prop.content = getcontentlanguage
-      when 'getcontentlength'
-        prop.content = getcontentlength
-      when 'getcontenttype'
-        prop.content = getcontenttype
-      when 'getetag'
-        prop.content = getetag
-      when 'getlastmodified'
-        prop.content = getlastmodified
       when 'lockdiscovery'
-        return get_lock_info
-      when 'resourcetype'
-        prop.content = resourcetype
-      when 'supportedlock'
-        prop.content = supportedlock
+        fetch_lock_info
+      when *DAV_PROPERTY_METHODS
+        prop.content = send prop.name
+        prop
       else
-        return get_custom_property prop.name
+        get_custom_property prop.name
       end
-
-      prop
     end
 
     def creationdate
@@ -457,7 +519,7 @@ module Calligraphy
     end
 
     def getcontentlanguage
-      get_custom_property(:contentlanguage)
+      get_custom_property :contentlanguage
     end
 
     def getcontentlength
@@ -465,7 +527,7 @@ module Calligraphy
     end
 
     def getcontenttype
-      get_custom_property(:contenttype)
+      get_custom_property :contenttype
     end
 
     def getetag
@@ -478,7 +540,7 @@ module Calligraphy
     end
 
     def lockdiscovery
-      get_lock_info
+      fetch_lock_info
     end
 
     def resourcetype
@@ -497,12 +559,85 @@ module Calligraphy
       @store_properties[prop.to_sym] unless @store_properties.nil? || prop.nil?
     end
 
-    def matching_namespace?(node_arr, node)
-      node_arr.select { |x| x.namespace.href == node.namespace.href }.length > 0
+    def update_found_properties(properties, prop, value)
+      if value.nil?
+        properties[:not_found].push prop
+      elsif value.is_a? Hash
+        value.each_key do |key|
+          properties[:found].push value[key]
+        end
+      else
+        properties[:found].push value
+      end
+    end
+
+    def add_remove_properties(nodes, actions)
+      nodes.each do |node|
+        if node.name == 'set'
+          add_properties node, actions
+        elsif node.name == 'remove'
+          remove_properties node, actions
+        end
+      end
+    end
+
+    def add_properties(node, actions)
+      node.children.each do |prop|
+        prop.children.each do |property|
+          node = Calligraphy::XML::Node.new property
+          prop_sym = property.name.to_sym
+
+          store_property_node node, prop_sym
+
+          actions[:set].push property
+        end
+      end
+    end
+
+    def store_property_node(node, prop)
+      # Property does not exist yet so we can just store the property node.
+      return @store[:properties][prop] = node unless @store[:properties][prop]
+
+      if @store[:properties][prop].is_a? Array
+        store_mismatch_namespace_property_node node, prop
+      elsif same_namespace? @store[:properties][prop], node
+        # If stored property and node have the same namespace, we can just
+        # overwrite the previously stored property node.
+        @store[:properties][prop] = node
+      else
+        # If stored property and node DO NOT have the same namespace, create
+        # an array for the stored property and push the new property node.
+        store_mismatch_namespace_property_nodes node, prop
+      end
+    end
+
+    def store_mismatch_namespace_property_node(node, prop)
+      node_arr = @store[:properties][prop]
+
+      namespace_mismatch = node_arr.select do |x|
+        x.namespace.href == node.namespace.href
+      end.length.positive?
+
+      @store[:properties][prop].push node unless namespace_mismatch
     end
 
     def same_namespace?(node1, node2)
-      node1.namespace.href == node2.namespace.href
+      node1.namespace&.href == node2.namespace&.href
+    end
+
+    def store_mismatch_namespace_property_nodes(node, prop)
+      @store[:properties][prop] = [@store[:properties][prop]]
+      @store[:properties][prop].push node
+    end
+
+    def remove_properties(node, actions)
+      node.children.each do |prop|
+        prop.children.each do |property|
+          @store[:properties].delete property.name.to_sym
+
+          actions[:remove].push property
+        end
+      end
     end
 
     def refresh_ancestor_locks(ancestor_path, ancestors)
@@ -510,17 +645,22 @@ module Calligraphy
       ancestors.pop
 
       if File.exist? ancestor_store_path
-        ancestor_store = PStore.new ancestor_store_path
-        ancestor_lock = ancestor_store.transaction do
-          ancestor_store[:lockdiscovery][-1][:timeout] = timeout_node
-          ancestor_store[:lockdiscovery]
-        end
+        ancestor_lock = refresh_ancestor_lock ancestor_store_path
 
         return map_array_of_hashes ancestor_lock
       end
 
       next_ancestor = split_and_pop(path: ancestor_path).join '/'
       refresh_ancestor_locks next_ancestor, ancestors
+    end
+
+    def refresh_ancestor_lock(ancestor_store_path)
+      ancestor_store = PStore.new ancestor_store_path
+
+      ancestor_store.transaction do
+        ancestor_store[:lockdiscovery][-1][:timeout] = timeout_node
+        ancestor_store[:lockdiscovery]
+      end
     end
 
     def remove_lock(token)
@@ -535,8 +675,6 @@ module Calligraphy
           end
         end
       end
-
-      @lock_info = nil
     end
   end
 end
