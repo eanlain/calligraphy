@@ -13,7 +13,8 @@ module Calligraphy
       properties = @resource.propfind xml
 
       builder = xml_builder
-      xml_res = builder.propfind_res @resource.full_request_path, properties
+      xml_res = builder.propfind_response(@resource.full_request_path,
+                                          properties)
 
       set_xml_content_type
 

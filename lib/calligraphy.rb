@@ -5,6 +5,7 @@ require 'calligraphy/rails/web_dav_methods'
 require 'calligraphy/rails/web_dav_preconditions'
 require 'calligraphy/rails/web_dav_requests_controller'
 
+require 'calligraphy/xml/web_dav_elements'
 require 'calligraphy/xml/builder'
 require 'calligraphy/xml/namespace'
 require 'calligraphy/xml/node'
