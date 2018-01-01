@@ -3,7 +3,7 @@
 require 'pstore'
 
 module Calligraphy
-  # Resource that's handles writing and deleting directories and files to disk.
+  # Resource responsible for writing and deleting directories and files to disk.
   class FileResource < Resource
     DAV_PROPERTY_METHODS = %w[
       creationdate displayname getcontentlanguage getcontentlength

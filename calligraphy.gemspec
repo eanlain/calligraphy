@@ -9,7 +9,6 @@ Gem::Specification.new do |s|
   s.name        = 'calligraphy'
   s.version     = Calligraphy::VERSION
   s.summary     = 'WebDAV framework and extension for Rails 5'
-  s.description = 'WebDAV framework and extension for Rails 5'
   s.author      = 'Brandon Robins'
   s.email       = 'brandon@onebnottwo.com'
   s.homepage    = 'http://www.github.com/eanlain/calligraphy'
@@ -18,13 +17,12 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '>= 2.3.0'
 
   s.files       = Dir['lib/**/*', 'LICENSE', 'README.md']
-  s.test_files  = Dir['spec/**/*']
 
-  s.add_dependency 'rails', '~> 5.0'
+  s.add_dependency 'rails', '~> 5.0', '>= 5.0'
 
-  s.add_development_dependency 'puma', '~> 3.11.0'
-  s.add_development_dependency 'rake', '~> 12.3.0'
-  s.add_development_dependency 'rspec-rails', '~> 3.7.2'
+  s.add_development_dependency 'puma', '~> 3.11.0', '>= 3.11.0'
+  s.add_development_dependency 'rake', '~> 12.3.0', '>= 12.3.0'
+  s.add_development_dependency 'rspec-rails', '~> 3.7.2', '>= 3.7.2'
   s.add_development_dependency 'rubocop', '~> 0.52.1'
-  s.add_development_dependency 'sqlite3', '~> 1.3.13'
+  s.add_development_dependency 'sqlite3', '~> 1.3.13', '>= 1.3.13'
 end
