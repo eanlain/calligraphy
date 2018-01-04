@@ -86,17 +86,17 @@ module Calligraphy
       end
 
       def prop(xml, property_set)
-        xml[@dav_ns].prop do
-          iterate_and_drilldown xml, property_set
-        end
+        xml[@dav_ns].prop { iterate_and_drilldown xml, property_set }
       end
 
-      def propstat(xml, property_set, status = :ok)
+      def propstat(xml, property_set, status, error_tag: nil, description: nil)
         return if property_set.empty?
 
         xml[@dav_ns].propstat do
           prop xml, property_set
           status xml, status
+          error xml, error_tag unless error_tag.nil?
+          responsedescription xml, description unless description.nil?
         end
       end
 
@@ -112,6 +112,16 @@ module Calligraphy
           status_code,
           Rack::Utils::HTTP_STATUS_CODES[status_code]
         ].join ' '
+      end
+
+      def error(xml, error)
+        xml.error { self_closing_tag xml, error }
+      end
+
+      def responsedescription(xml, description)
+        xml.responsedescription do
+          xml.text description
+        end
       end
     end
   end

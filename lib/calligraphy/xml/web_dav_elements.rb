@@ -8,10 +8,10 @@ module Calligraphy
         activelock allprop collection creationdate depth displayname error
         exclusive getcontentlanguage getcontentlength getcontenttype getetag
         getlastmodified href include location lockdiscovery lockentry lockinfo
-        lockroot lockscope locktoken locktype multistatus owner prop
-        propertyupdate propfind propname propstat remove response
+        lockroot lockscope locktoken locktype mkcol-response multistatus owner
+        prop propertyupdate propfind propname propstat remove response
         responsedescription resourcetype set shared status supportedlock
-        timeout write
+        timeout valid-resourcetype write
       ].freeze
 
       DAV_NS_METHODS = %w[resourcetype supportedlock timeout].freeze
@@ -29,6 +29,21 @@ module Calligraphy
         end
       end
 
+      # Build an XML response for a failed MKCOL request.
+      def mkcol_response(properties)
+        description = 'Resource type is not supported by this server'
+        error = 'valid-resourcetype'
+
+        build 'mkcol-response' do |xml|
+          propstat(xml, properties[:found],
+                   :forbidden, error_tag: error, description: description)
+
+          if properties[:not_found].length.positive?
+            propstat xml, properties[:not_found], :failed_dependency
+          end
+        end
+      end
+
       # Build an XML response for a PROPFIND request.
       def propfind_response(path, properties)
         multistatus do |xml|
@@ -42,8 +57,8 @@ module Calligraphy
       def proppatch_response(path, actions)
         multistatus do |xml|
           href xml, path
-          propstat xml, actions[:set]
-          propstat xml, actions[:remove]
+          propstat xml, actions[:set], :ok
+          propstat xml, actions[:remove], :ok
         end
       end
 

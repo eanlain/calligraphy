@@ -44,6 +44,23 @@ module Calligraphy
       File.directory? @src_path
     end
 
+    # Responsible for creating a duplicate of the resource in
+    # `options[:destination]` (see section 9.8 of RFC4918).
+    #
+    # Used in COPY and MOVE (which inherits from COPY) requests.
+    def copy(options)
+      destination = copy_destination options
+      to_path = join_paths @root_dir, destination
+      to_path_exists = File.exist? to_path
+
+      preserve_existing = false? options[:overwrite]
+
+      copy_resource_to_path to_path, preserve_existing
+      copy_pstore_to_path to_path, preserve_existing
+
+      to_path_exists
+    end
+
     # Responsible for returning a hash with keys indicating if the resource
     # can be copied, if an ancestor exists, or if the copy destinatin is
     # locked.
@@ -65,23 +82,6 @@ module Calligraphy
       copy_options
     end
 
-    # Responsible for creating a duplicate of the resource in
-    # `options[:destination]` (see section 9.8 of RFC4918).
-    #
-    # Used in COPY and MOVE (which inherits from COPY) requests.
-    def copy(options)
-      destination = copy_destination options
-      to_path = join_paths @root_dir, destination
-      to_path_exists = File.exist? to_path
-
-      preserve_existing = false? options[:overwrite]
-
-      copy_resource_to_path to_path, preserve_existing
-      copy_pstore_to_path to_path, preserve_existing
-
-      to_path_exists
-    end
-
     # Responsible for creating a new collection based on the resource (see
     # section 9.3 of RFC4918).
     #
@@ -97,6 +97,12 @@ module Calligraphy
     def delete_collection
       FileUtils.rm_r @src_path
       FileUtils.rm_r @store_path if store_exist?
+    end
+
+    # Responsible for returning a boolean indicating whether the resource
+    # supports Extended MKCOL (see RFC5689).
+    def enable_extended_mkcol?
+      true
     end
 
     # Responsible for returning unique identifier used to create an etag.
@@ -185,6 +191,8 @@ module Calligraphy
     #
     # Used in PROPPATCH requests.
     def proppatch(nodes)
+      init_pstore unless exists?
+
       actions = { set: [], remove: [] }
 
       @store.transaction do
@@ -584,6 +592,8 @@ module Calligraphy
     def add_properties(node, actions)
       node.children.each do |prop|
         prop.children.each do |property|
+          next unless node.is_a? Nokogiri::XML::Element
+
           node = Calligraphy::XML::Node.new property
           prop_sym = property.name.to_sym
 

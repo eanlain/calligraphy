@@ -44,7 +44,12 @@ module Calligraphy
       end
 
       def mkcol
-        Calligraphy::Mkcol.new(web_dav_request).execute
+        mkcol_request = Calligraphy::Mkcol.new(web_dav_request)
+
+        precondition_response = mkcol_request.preconditions
+        return precondition_response unless precondition_response.nil?
+
+        mkcol_request.execute
       end
 
       def propfind
