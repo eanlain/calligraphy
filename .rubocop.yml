@@ -1,9 +1,10 @@
 AllCops:
   TargetRubyVersion: 2.3
   Exclude:
-    - 'spec/**/*'
+    - 'spec/dummy/**/*'
 Metrics/BlockLength:
   Exclude:
+    - 'spec/**/*'
     - 'Rakefile'
 Metrics/ClassLength:
   Exclude:
@@ -15,6 +16,8 @@ Metrics/AbcSize:
 Metrics/LineLength:
   Exclude:
     - 'lib/calligraphy/rails/mapper.rb'
+    - 'spec/spec_helper.rb'
+    - 'spec/rails_helper.rb'
 Metrics/MethodLength:
   Exclude:
     - 'lib/calligraphy/rails/mapper.rb'

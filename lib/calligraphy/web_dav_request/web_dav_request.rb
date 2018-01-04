@@ -19,6 +19,11 @@ module Calligraphy
       @resource = resource
     end
 
+    # Responsible for evaluating preconditions for the WebDAV request.
+    def preconditions
+      raise NotImplemented
+    end
+
     # Executes the WebDAV request for a particular resource.
     def execute
       raise NotImplemented
@@ -35,7 +40,7 @@ module Calligraphy
     end
 
     def xml_builder
-      protocol = @request.env['SERVER_PROTOCOL']
+      protocol = @request.env['SERVER_PROTOCOL'] || 'HTTP/1.1'
 
       Calligraphy::XML::Builder.new server_protocol: protocol
     end

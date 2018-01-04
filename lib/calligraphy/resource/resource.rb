@@ -36,6 +36,14 @@ module Calligraphy
       raise NotImplementedError
     end
 
+    # Responsible for creating a duplicate of the resource in
+    # `options[:destination]` (see section 9.8 of RFC4918).
+    #
+    # Used in COPY and MOVE (which inherits from COPY) requests.
+    def copy(_options)
+      raise NotImplementedError
+    end
+
     # Responsible for returning a hash with keys indicating if the resource
     # can be copied, if an ancestor exists, or if the copy destinatin is
     # locked.
@@ -45,14 +53,6 @@ module Calligraphy
     #
     # Used in COPY and MOVE (which inherits from COPY) requests.
     def copy_options(_options)
-      raise NotImplementedError
-    end
-
-    # Responsible for creating a duplicate of the resource in
-    # `options[:destination]` (see section 9.8 of RFC4918).
-    #
-    # Used in COPY and MOVE (which inherits from COPY) requests.
-    def copy(_options)
       raise NotImplementedError
     end
 
@@ -70,7 +70,10 @@ module Calligraphy
     #
     # Used in OPTIONS requests.
     def dav_compliance
-      '1, 2, 3'
+      compliance_classes = %w[1 2 3]
+      compliance_classes.push 'extended-mkcol' if enable_extended_mkcol?
+
+      compliance_classes.join ', '
     end
 
     # Responsible for deleting a resource collection (see section 9.6 of
@@ -79,6 +82,12 @@ module Calligraphy
     # Used in DELETE and MOVE requests.
     def delete_collection
       raise NotImplementedError
+    end
+
+    # Responsible for returning a boolean indicating whether the resource
+    # supports Extended MKCOL (see RFC5689).
+    def enable_extended_mkcol?
+      false
     end
 
     # Responsible for returning unique identifier used to create an etag.
@@ -177,6 +186,16 @@ module Calligraphy
     # Used in PUT requests.
     def write(_contents = @request_body.to_s)
       raise NotImplementedError
+    end
+
+    # Responsible for declaring the valid `resourcetypes` for a resource. If
+    # an extended MKCOL request is made using an invalid `resourcetype` the
+    # request will fail with a 403 (Forbidden) and will return an XML response
+    # with the `mkcol-response` element (see section 3.3 and 3.5 of RFC5689).
+    #
+    # Used in Extended MKCOL requests.
+    def valid_resourcetypes
+      %w[collection]
     end
 
     private
