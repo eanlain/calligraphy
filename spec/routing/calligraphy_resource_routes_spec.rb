@@ -1,13 +1,15 @@
+# frozen_string_literal: true
+
 require 'rails_helper'
 
-RSpec.describe 'calligraphy_resource', :type => :routing do
+RSpec.describe 'calligraphy_resource', type: :routing do
   describe 'routes to WebDavRequests controller' do
     context 'for OPTIONS requests' do
       it do
         expect(options: '/test/one').to route_to(
           controller: 'calligraphy/rails/web_dav_requests',
           action: 'invoke_method',
-          resource: 'one',
+          resource: 'one'
         )
       end
     end
@@ -17,7 +19,7 @@ RSpec.describe 'calligraphy_resource', :type => :routing do
         expect(options: '/test/two').to route_to(
           controller: 'calligraphy/rails/web_dav_requests',
           action: 'invoke_method',
-          resource: 'two',
+          resource: 'two'
         )
       end
     end
@@ -27,7 +29,7 @@ RSpec.describe 'calligraphy_resource', :type => :routing do
         expect(put: '/test/three').to route_to(
           controller: 'calligraphy/rails/web_dav_requests',
           action: 'invoke_method',
-          resource: 'three',
+          resource: 'three'
         )
       end
     end
@@ -37,7 +39,7 @@ RSpec.describe 'calligraphy_resource', :type => :routing do
         expect(delete: '/test/four').to route_to(
           controller: 'calligraphy/rails/web_dav_requests',
           action: 'invoke_method',
-          resource: 'four',
+          resource: 'four'
         )
       end
     end
@@ -47,7 +49,7 @@ RSpec.describe 'calligraphy_resource', :type => :routing do
         expect(copy: '/test/five').to route_to(
           controller: 'calligraphy/rails/web_dav_requests',
           action: 'invoke_method',
-          resource: 'five',
+          resource: 'five'
         )
       end
     end
@@ -57,7 +59,7 @@ RSpec.describe 'calligraphy_resource', :type => :routing do
         expect(move: '/test/six').to route_to(
           controller: 'calligraphy/rails/web_dav_requests',
           action: 'invoke_method',
-          resource: 'six',
+          resource: 'six'
         )
       end
     end
@@ -67,7 +69,7 @@ RSpec.describe 'calligraphy_resource', :type => :routing do
         expect(mkcol: '/test/seven').to route_to(
           controller: 'calligraphy/rails/web_dav_requests',
           action: 'invoke_method',
-          resource: 'seven',
+          resource: 'seven'
         )
       end
     end
@@ -77,7 +79,7 @@ RSpec.describe 'calligraphy_resource', :type => :routing do
         expect(propfind: '/test/eight').to route_to(
           controller: 'calligraphy/rails/web_dav_requests',
           action: 'invoke_method',
-          resource: 'eight',
+          resource: 'eight'
         )
       end
     end
@@ -87,7 +89,7 @@ RSpec.describe 'calligraphy_resource', :type => :routing do
         expect(proppatch: '/test/nine').to route_to(
           controller: 'calligraphy/rails/web_dav_requests',
           action: 'invoke_method',
-          resource: 'nine',
+          resource: 'nine'
         )
       end
     end
@@ -97,7 +99,7 @@ RSpec.describe 'calligraphy_resource', :type => :routing do
         expect(lock: '/test/ten').to route_to(
           controller: 'calligraphy/rails/web_dav_requests',
           action: 'invoke_method',
-          resource: 'ten',
+          resource: 'ten'
         )
       end
     end
@@ -107,7 +109,7 @@ RSpec.describe 'calligraphy_resource', :type => :routing do
         expect(unlock: '/test/eleven').to route_to(
           controller: 'calligraphy/rails/web_dav_requests',
           action: 'invoke_method',
-          resource: 'eleven',
+          resource: 'eleven'
         )
       end
     end

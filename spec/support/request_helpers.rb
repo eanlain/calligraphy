@@ -1,7 +1,13 @@
+# frozen_string_literal: true
+
 module ActionDispatch
   module Integration
     module RequestHelpers
-      %w[copy move mkcol options propfind proppatch lock unlock].each do |method|
+      request_methods = %w[
+        copy move mkcol options propfind proppatch lock unlock
+      ]
+
+      request_methods.each do |method|
         define_method method do |path, **args|
           process method.to_sym, path, **args
         end
