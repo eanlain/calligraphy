@@ -34,6 +34,8 @@ module Calligraphy
 
     # Given an array of hashes, returns an array of hash values.
     def map_array_of_hashes(arr_hashes)
+      return if arr_hashes.nil?
+
       [].tap do |output_array|
         arr_hashes.each do |hash|
           output_array.push hash.values
