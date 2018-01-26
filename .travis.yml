@@ -7,6 +7,3 @@ rvm:
 script:
   - bundle exec rake spec
   - bundle exec rake litmus:run
-matrix:
-  allow_failures:
-    - rvm: 2.5
