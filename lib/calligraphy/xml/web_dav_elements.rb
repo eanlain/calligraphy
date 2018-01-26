@@ -20,9 +20,9 @@ module Calligraphy
       def lock_response(activelock_properties)
         build :prop do |xml|
           xml.lockdiscovery do
-            activelock_properties.each do |properties|
+            activelock_properties.each do |property_set|
               xml.activelock do
-                iterate_and_drilldown xml, properties
+                iterate_and_drilldown xml, property_set
               end
             end
           end

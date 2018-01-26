@@ -32,11 +32,11 @@ module Calligraphy
     end
 
     def destination_header
-      @headers['Destination'].split(@headers['Host'])[-1]
+      @headers['Destination'].split(@headers['Host']).last
     end
 
     def remove_trailing_slash(input)
-      input[-1] == '/' ? input[0..-2] : input
+      input.last == '/' ? input[0..-2] : input
     end
   end
 end

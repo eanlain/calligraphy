@@ -31,7 +31,7 @@ module Calligraphy
         xml_str = fragment.is_a?(Array) ? fragment.join : fragment
 
         xml = Nokogiri::XML.fragment(xml_str).children
-        fragment.is_a?(Array) ? xml : xml[-1]
+        fragment.is_a?(Array) ? xml : xml.last
       end
 
       # Iterates through each property in `properties` hash and deserializes

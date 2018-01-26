@@ -222,7 +222,7 @@ module Calligraphy
     def refresh_lock
       if locked?
         @store.transaction do
-          @store[:lockdiscovery][-1][:timeout] = timeout_node
+          @store[:lockdiscovery].last[:timeout] = timeout_node
         end
 
         fetch_lock_info
@@ -416,7 +416,8 @@ module Calligraphy
     end
 
     def lockscope
-      @lock_info[-1][:lockscope]
+      @lock_info
+        .last[:lockscope]
         .children
         .select { |x| x.is_a? Nokogiri::XML::Element }
         .last
@@ -439,7 +440,7 @@ module Calligraphy
 
     def locking_ancestor?(ancestor_path, ancestors, headers = nil)
       ancestor_info = ancestor_lock_info headers
-      ancestor_store_path = "#{ancestor_path}/#{ancestors[-1]}.pstore"
+      ancestor_store_path = "#{ancestor_path}/#{ancestors.last}.pstore"
 
       ancestors.pop
 
@@ -669,7 +670,7 @@ module Calligraphy
     end
 
     def refresh_ancestor_locks(ancestor_path, ancestors)
-      ancestor_store_path = "#{ancestor_path}/#{ancestors[-1]}.pstore"
+      ancestor_store_path = "#{ancestor_path}/#{ancestors.last}.pstore"
       ancestors.pop
 
       if File.exist? ancestor_store_path
@@ -686,7 +687,7 @@ module Calligraphy
       ancestor_store = PStore.new ancestor_store_path
 
       ancestor_store.transaction do
-        ancestor_store[:lockdiscovery][-1][:timeout] = timeout_node
+        ancestor_store[:lockdiscovery].last[:timeout] = timeout_node
         ancestor_store[:lockdiscovery]&.map do |lock_info|
           lock_info.transform_values do |xml_fragment|
             parse_serialized_fragment xml_fragment

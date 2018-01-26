@@ -7,6 +7,8 @@ module Calligraphy
 
     # Executes the WebDAV request for a particular resource.
     def execute
+      # The `propfind` tag contains the properties to retrieve for a
+      # particular resource.
       xml = xml_for body: body, node: 'propfind'
       return :bad_request if xml == :bad_request
 

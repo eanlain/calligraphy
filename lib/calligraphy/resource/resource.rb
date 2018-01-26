@@ -16,7 +16,7 @@ module Calligraphy
       @full_request_path = req&.original_url
       @mount_point = mount || req&.path&.tap { |s| s.slice! resource }
       @request_body = req&.body&.read || ''
-      @request_path = mount.nil? ? resource : resource.split(mount)[-1]
+      @request_path = mount.nil? ? resource : resource.split(mount).last
       @root_dir = root_dir
     end
 

@@ -69,7 +69,8 @@ module Calligraphy
     end
 
     def extract_lock_token(properties)
-      properties[-1]
+      properties
+        .last
         .select { |x| x.name == 'locktoken' }[0]
         .children
         .text
