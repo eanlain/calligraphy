@@ -12,6 +12,7 @@ module Calligraphy
     ].freeze
 
     include Calligraphy::Utils
+    include Calligraphy::XML::Utils
 
     #:nodoc:
     def initialize(resource: nil, req: nil, mount: nil, root_dir: Dir.pwd)
@@ -129,6 +130,7 @@ module Calligraphy
 
       nodes.each do |node|
         next unless node.is_a? Nokogiri::XML::Element
+
         properties[node.name.to_sym] = node
       end
 
@@ -182,6 +184,7 @@ module Calligraphy
         end
       end
 
+      properties[:found] = properties[:found].uniq.flatten if properties[:found]
       properties
     end
 
@@ -378,39 +381,46 @@ module Calligraphy
     end
 
     def create_lock_token
-      token = Calligraphy::XML::Node.new
-      token.name = 'locktoken'
+      href = xml_node 'href'
+      href.content = ['urn', 'uuid', SecureRandom.uuid].join ':'
 
-      href = Calligraphy::XML::Node.new
-      href.name = 'href'
-      href.text = ['urn', 'uuid', SecureRandom.uuid].join ':'
-
-      token.children = [href]
-      token
+      token = xml_node 'locktoken'
+      token.add_child href
+      token.serialize
     end
 
     def timeout_node
-      Calligraphy::XML::Node.new.tap do |node|
-        node.name = 'timeout'
-        node.text = ['Second', Calligraphy.lock_timeout_period].join '-'
-      end
+      node = xml_node 'timeout'
+      node.content = ['Second', Calligraphy.lock_timeout_period].join '-'
+      node.serialize
     end
 
     def add_lock_properties(activelock, properties)
       properties.each_key do |prop|
-        activelock[prop] = Calligraphy::XML::Node.new properties[prop]
+        activelock[prop] = properties[prop].serialize
       end
     end
 
     def fetch_lock_info
       return nil if @store.nil?
 
-      @lock_info = @store.transaction(true) { @store[:lockdiscovery] }
+      @lock_info = @store.transaction(true) do
+        @store[:lockdiscovery]&.map do |lock_info|
+          lock_info.transform_values do |xml_fragment|
+            parse_serialized_fragment xml_fragment
+          end
+        end
+      end
+
       @lock_info.nil? ? nil : map_array_of_hashes(@lock_info)
     end
 
     def lockscope
-      @lock_info[-1][:lockscope].children[0].name
+      @lock_info[-1][:lockscope]
+        .children
+        .select { |x| x.is_a? Nokogiri::XML::Element }
+        .last
+        .name
     end
 
     def can_unlock?(headers = nil)
@@ -423,7 +433,8 @@ module Calligraphy
 
     def lock_tokens
       fetch_lock_info
-      @lock_info&.each { |x| x }&.map { |k| k[:locktoken].children[0].text }
+
+      @lock_info&.each { |x| x }&.map { |x| x[:locktoken].text.strip }
     end
 
     def locking_ancestor?(ancestor_path, ancestors, headers = nil)
@@ -508,13 +519,11 @@ module Calligraphy
 
     def get_property(prop)
       case prop.name
-      when 'lockdiscovery'
-        fetch_lock_info
       when *DAV_PROPERTY_METHODS
         prop.content = send prop.name
         prop
       else
-        get_custom_property prop.name
+        get_custom_property prop.name, deserialize: true
       end
     end
 
@@ -562,8 +571,15 @@ module Calligraphy
       JSON.generate [exclusive_write, shared_write]
     end
 
-    def get_custom_property(prop)
-      @store_properties ||= @store.transaction(true) { @store[:properties] }
+    def get_custom_property(prop, deserialize: false)
+      @store_properties ||= @store.transaction(true) do
+        if deserialize
+          deserialize_stored_properties @store[:properties]
+        else
+          @store[:properties]
+        end
+      end
+
       @store_properties[prop.to_sym] unless @store_properties.nil? || prop.nil?
     end
 
@@ -594,10 +610,9 @@ module Calligraphy
         prop.children.each do |property|
           next unless node.is_a? Nokogiri::XML::Element
 
-          node = Calligraphy::XML::Node.new property
           prop_sym = property.name.to_sym
 
-          store_property_node node, prop_sym
+          store_property_node property.serialize, prop_sym
 
           actions[:set].push property
         end
@@ -624,15 +639,18 @@ module Calligraphy
     def store_mismatch_namespace_property_node(node, prop)
       node_arr = @store[:properties][prop]
 
-      namespace_mismatch = node_arr.select do |x|
-        x.namespace.href == node.namespace.href
+      namespace_mismatch = node_arr.select do |stored_node|
+        same_namespace? stored_node, node
       end.length.positive?
 
       @store[:properties][prop].push node unless namespace_mismatch
     end
 
     def same_namespace?(node1, node2)
-      node1.namespace&.href == node2.namespace&.href
+      node1_xml = parse_serialized_fragment node1
+      node2_xml = parse_serialized_fragment node2
+
+      node1_xml.namespace&.href == node2_xml.namespace&.href
     end
 
     def store_mismatch_namespace_property_nodes(node, prop)
@@ -669,7 +687,11 @@ module Calligraphy
 
       ancestor_store.transaction do
         ancestor_store[:lockdiscovery][-1][:timeout] = timeout_node
-        ancestor_store[:lockdiscovery]
+        ancestor_store[:lockdiscovery]&.map do |lock_info|
+          lock_info.transform_values do |xml_fragment|
+            parse_serialized_fragment xml_fragment
+          end
+        end
       end
     end
 
@@ -681,7 +703,7 @@ module Calligraphy
           @store.delete :lockdiscovery
         else
           @store[:lockdiscovery] = @store[:lockdiscovery].reject do |activelock|
-            activelock[:locktoken].children[0].text == token
+            activelock[:locktoken].include? token
           end
         end
       end

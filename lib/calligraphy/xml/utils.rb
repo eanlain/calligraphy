@@ -26,6 +26,24 @@ module Calligraphy
         end.flatten
       end
 
+      # Parses a serialized string or array fragment to XML.
+      def parse_serialized_fragment(fragment)
+        xml_str = fragment.is_a?(Array) ? fragment.join : fragment
+
+        xml = Nokogiri::XML.fragment(xml_str).children
+        fragment.is_a?(Array) ? xml : xml[-1]
+      end
+
+      # Iterates through each property in `properties` hash and deserializes
+      # the property's value.
+      def deserialize_stored_properties(properties)
+        return if properties.nil?
+
+        properties.each_pair do |k, v|
+          properties[k] = parse_serialized_fragment v
+        end
+      end
+
       # Iterates through top level nodes, finds node names that match and
       # separates matching nodes from non-matching nodes.
       def separate_nodes_by_name(nodes, match_name)
@@ -34,12 +52,17 @@ module Calligraphy
             next unless node.is_a? Nokogiri::XML::Element
 
             if node.name == match_name
-              property[:found].push Calligraphy::XML::Node.new node
+              property[:found].push node
             else
-              property[:not_found].push Calligraphy::XML::Node.new node
+              property[:not_found].push node
             end
           end
         end
+      end
+
+      # Creates a new instance of Nokogiri::XML::Node with a given name.
+      def xml_node(name)
+        Nokogiri::XML::Node.new name, dummy_doc
       end
 
       private
@@ -48,6 +71,10 @@ module Calligraphy
         xml.namespaces.each_value do |v|
           return v if v == Calligraphy::DAV_NS
         end
+      end
+
+      def dummy_doc
+        Nokogiri::XML::Document.new
       end
     end
   end

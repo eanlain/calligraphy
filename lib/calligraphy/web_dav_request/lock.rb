@@ -71,8 +71,9 @@ module Calligraphy
     def extract_lock_token(properties)
       properties[-1]
         .select { |x| x.name == 'locktoken' }[0]
-        .children[0]
+        .children
         .text
+        .strip
     end
 
     def prepare_response_headers(lock_token)
