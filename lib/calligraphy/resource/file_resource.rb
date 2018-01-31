@@ -6,9 +6,9 @@ module Calligraphy
   # Resource responsible for writing and deleting directories and files to disk.
   class FileResource < Resource
     DAV_PROPERTY_METHODS = %w[
-      creationdate displayname getcontentlanguage getcontentlength
-      getcontenttype getetag getlastmodified lockdiscovery resourcetype
-      supportedlock
+      allprop creationdate displayname getcontentlanguage getcontentlength
+      getcontenttype getetag getlastmodified lockdiscovery propname
+      resourcetype supportedlock
     ].freeze
 
     include Calligraphy::Utils
@@ -174,15 +174,7 @@ module Calligraphy
     def propfind(nodes)
       properties = { found: [], not_found: [] }
 
-      nodes.each do |node|
-        node.children.each do |prop|
-          next unless prop.is_a? Nokogiri::XML::Element
-
-          value = get_property prop
-
-          update_found_properties properties, prop, value
-        end
-      end
+      find_properties_from_xml_elements nodes, properties
 
       properties[:found] = properties[:found].uniq.flatten if properties[:found]
       properties
@@ -507,6 +499,30 @@ module Calligraphy
         (lock_info[:check_creator] && (lock_info[:creator] == client_nonce))
     end
 
+    def find_properties_from_xml_elements(nodes, properties)
+      nodes.each do |node|
+        next unless node.is_a? Nokogiri::XML::Element
+
+        if node.children.length.positive?
+          find_properties_from_property_nodes node, properties
+        else
+          value = get_property node
+
+          update_found_properties properties, node, value
+        end
+      end
+    end
+
+    def find_properties_from_property_nodes(node, properties)
+      node.children.each do |prop|
+        next unless prop.is_a? Nokogiri::XML::Element
+
+        value = get_property prop
+
+        update_found_properties properties, prop, value
+      end
+    end
+
     def ancestor_lock_tokens(lock_info)
       lock_info[:lock].each { |x| x }.map { |k| k[:locktoken].children[0].text }
     end
@@ -521,55 +537,94 @@ module Calligraphy
     def get_property(prop)
       case prop.name
       when *DAV_PROPERTY_METHODS
-        prop.content = send prop.name
-        prop
+        send prop.name, prop
       else
         get_custom_property prop.name, deserialize: true
       end
     end
 
-    def creationdate
-      @stats[:created_at]
+    def allprop(_prop)
+      get_custom_property nil, deserialize: true
+
+      {}.tap do |properties|
+        @store_properties.each_value do |node|
+          next unless node.is_a? Nokogiri::XML::Element
+
+          properties[node.name.to_sym] = node
+        end
+      end
     end
 
-    def displayname
-      get_custom_property(:displayname) || @name
+    def creationdate(prop)
+      prop.content = @stats[:created_at]
+      prop
     end
 
-    def getcontentlanguage
-      get_custom_property :contentlanguage
+    def displayname(prop)
+      prop.content = get_custom_property(:displayname) || @name
+      prop
     end
 
-    def getcontentlength
-      @stats[:size]
+    def getcontentlanguage(prop)
+      prop.content = get_custom_property :contentlanguage
+      prop
     end
 
-    def getcontenttype
-      get_custom_property :contenttype
+    def getcontentlength(prop)
+      prop.content = @stats[:size]
+      prop
     end
 
-    def getetag
+    def getcontenttype(prop)
+      prop.content = get_custom_property :contenttype
+      prop
+    end
+
+    def getetag(prop)
       cache_key = ActiveSupport::Cache.expand_cache_key [@resource.etag, '']
-      "W/\"#{Digest::MD5.hexdigest(cache_key)}\""
+
+      prop.content = "W/\"#{Digest::MD5.hexdigest(cache_key)}\""
+      prop
     end
 
-    def getlastmodified
-      @updated_at
+    def getlastmodified(prop)
+      prop.content = @updated_at
+      prop
     end
 
-    def lockdiscovery
-      fetch_lock_info
+    # def include(prop)
+    #   # TODO: Implement
+    #   prop
+    # end
+
+    def lockdiscovery(prop)
+      prop.content = fetch_lock_info
+      prop
     end
 
-    def resourcetype
-      'collection' if collection?
+    def propname(_prop)
+      get_custom_property nil, deserialize: true
+
+      {}.tap do |properties|
+        @store_properties.each_value do |node|
+          next unless node.is_a? Nokogiri::XML::Element
+
+          properties[node.name.to_sym] = xml_node node.name
+        end
+      end
     end
 
-    def supportedlock
+    def resourcetype(prop)
+      prop.content = 'collection' if collection?
+      prop
+    end
+
+    def supportedlock(prop)
       exclusive_write = lockentry_hash('exclusive', 'write')
       shared_write = lockentry_hash('shared', 'write')
 
-      JSON.generate [exclusive_write, shared_write]
+      prop.content = JSON.generate [exclusive_write, shared_write]
+      prop
     end
 
     def get_custom_property(prop, deserialize: false)
@@ -609,11 +664,10 @@ module Calligraphy
     def add_properties(node, actions)
       node.children.each do |prop|
         prop.children.each do |property|
-          next unless node.is_a? Nokogiri::XML::Element
+          next unless property.is_a? Nokogiri::XML::Element
 
           prop_sym = property.name.to_sym
-
-          store_property_node property.serialize, prop_sym
+          store_property_node property.clone.serialize, prop_sym
 
           actions[:set].push property
         end
