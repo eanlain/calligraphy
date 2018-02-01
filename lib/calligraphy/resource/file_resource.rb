@@ -552,6 +552,10 @@ module Calligraphy
 
           properties[node.name.to_sym] = node
         end
+
+        (DAV_PROPERTY_METHODS - %w[allprop propname]).each do |property|
+          properties[property.to_sym] = send property, xml_node(property)
+        end
       end
     end
 

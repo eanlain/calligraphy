@@ -31,16 +31,23 @@ RSpec.describe 'PROPFIND', type: :request do
     end
 
     describe 'allprop' do
-      it 'returns all property names and values' do
+      it 'returns all live and dead properties' do
         propfind '/webdav/bar.html', headers: {
           RAW_POST_DATA: Support::Examples::Propfind.allprop
         }
+
+        property_methods = Calligraphy::FileResource::DAV_PROPERTY_METHODS -
+                           %w[allprop propname]
 
         expect(response.status).to eq(207)
         expect(response.body).to include('Authors')
         expect(response.body).to include('Author>')
         expect(response.body).to include('Jim')
         expect(response.body).to include('Roy')
+
+        property_methods.each do |property_method|
+          expect(response.body).to include(property_method)
+        end
       end
     end
 
