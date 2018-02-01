@@ -7,10 +7,10 @@ require 'support/examples/ext_mkcol'
 RSpec.describe 'mkcol', type: :request do
   before(:all) do
     tmp_dir = Rails.root.join('../../tmp').to_path
-    Dir.mkdir tmp_dir unless File.exists? tmp_dir
+    Dir.mkdir tmp_dir unless File.exist? tmp_dir
 
     webdav_dir = Rails.root.join('../../tmp/webdav').to_path
-    FileUtils.rm_r webdav_dir if File.exists? webdav_dir
+    FileUtils.rm_r webdav_dir if File.exist? webdav_dir
     Dir.mkdir webdav_dir
   end
 
