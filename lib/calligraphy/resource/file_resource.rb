@@ -585,7 +585,7 @@ module Calligraphy
     end
 
     def getetag(prop)
-      cache_key = ActiveSupport::Cache.expand_cache_key [@resource.etag, '']
+      cache_key = ActiveSupport::Cache.expand_cache_key [etag, '']
 
       prop.content = "W/\"#{Digest::MD5.hexdigest(cache_key)}\""
       prop
