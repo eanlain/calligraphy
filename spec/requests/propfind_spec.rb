@@ -6,25 +6,22 @@ require 'support/examples/propfind'
 require 'support/examples/proppatch'
 
 RSpec.describe 'PROPFIND', type: :request do
-  before(:all) do
-    tmp_dir = Rails.root.join('../../tmp').to_path
-    Dir.mkdir tmp_dir unless File.exist? tmp_dir
-
-    webdav_dir = Rails.root.join('../../tmp/webdav').to_path
-    FileUtils.rm_r webdav_dir if File.exist? webdav_dir
-    Dir.mkdir webdav_dir
+  before(:context) do
+    Calligraphy::FileResource.setup
   end
 
   before(:each) do
-    allow(Calligraphy).to receive(:enable_digest_authentication)
-      .and_return(false)
+    skip_authentication
+  end
+
+  after(:context) do
+    Calligraphy::FileResource.cleanup
   end
 
   context 'with xml defintiion' do
     before(:each) do
-      put '/webdav/bar.html', headers: {
-        RAW_POST_DATA: 'hello world'
-      }
+      Calligraphy::FileResource.create resource: 'bar.html'
+
       proppatch '/webdav/bar.html', headers: {
         RAW_POST_DATA: Support::Examples::Proppatch.rfc4918_9_2_2
       }

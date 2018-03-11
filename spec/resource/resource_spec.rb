@@ -46,5 +46,19 @@ RSpec.describe 'Resource' do
         expect(resource.dav_compliance).to eq('1, 2, 3')
       end
     end
+
+    describe '#enable_extended_mkcol?' do
+      it 'is not enabled by default' do
+        resource = Calligraphy::Resource.new
+        expect(resource.enable_extended_mkcol?).to eq(false)
+      end
+    end
+
+    describe '#valid_resourcetypes' do
+      it 'returns only a collection resourcetype by default' do
+        resource = Calligraphy::Resource.new
+        expect(resource.valid_resourcetypes).to match_array(['collection'])
+      end
+    end
   end
 end

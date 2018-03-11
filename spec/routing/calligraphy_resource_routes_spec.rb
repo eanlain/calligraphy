@@ -113,5 +113,15 @@ RSpec.describe 'calligraphy_resource', type: :routing do
         )
       end
     end
+
+    context 'for HEAD requests' do
+      it do
+        expect(head: '/test/twelve').to route_to(
+          controller: 'calligraphy/rails/web_dav_requests',
+          action: 'invoke_method',
+          resource: 'twelve'
+        )
+      end
+    end
   end
 end

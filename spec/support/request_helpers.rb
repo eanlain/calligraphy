@@ -15,3 +15,7 @@ module ActionDispatch
     end
   end
 end
+
+def skip_authentication
+  allow(Calligraphy).to receive(:enable_digest_authentication).and_return(false)
+end
