@@ -71,6 +71,7 @@ module Calligraphy
     # Used in OPTIONS requests.
     def dav_compliance
       compliance_classes = %w[1 2 3]
+      compliance_classes.push 'access-control' if enable_access_control?
       compliance_classes.push 'extended-mkcol' if enable_extended_mkcol?
 
       compliance_classes.join ', '
@@ -82,6 +83,12 @@ module Calligraphy
     # Used in DELETE and MOVE requests.
     def delete_collection
       raise NotImplementedError
+    end
+
+    # Responsible for returning a boolean indicating whether the resource
+    # supports Access Control Protocol (see RFC3744).
+    def enable_access_control?
+      false
     end
 
     # Responsible for returning a boolean indicating whether the resource

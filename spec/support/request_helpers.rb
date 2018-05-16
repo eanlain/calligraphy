@@ -4,7 +4,7 @@ module ActionDispatch
   module Integration
     module RequestHelpers
       request_methods = %w[
-        copy move mkcol options propfind proppatch lock unlock
+        copy move mkcol options propfind proppatch lock unlock acl
       ]
 
       request_methods.each do |method|

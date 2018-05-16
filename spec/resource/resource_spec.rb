@@ -47,6 +47,13 @@ RSpec.describe 'Resource' do
       end
     end
 
+    describe '#enable_access_control?' do
+      it 'is not enabled by default' do
+        resource = Calligraphy::Resource.new
+        expect(resource.enable_access_control?).to eq(false)
+      end
+    end
+
     describe '#enable_extended_mkcol?' do
       it 'is not enabled by default' do
         resource = Calligraphy::Resource.new

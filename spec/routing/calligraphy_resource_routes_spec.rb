@@ -123,5 +123,15 @@ RSpec.describe 'calligraphy_resource', type: :routing do
         )
       end
     end
+
+    context 'for ACL requests' do
+      it do
+        expect(acl: '/test/thirteen').to route_to(
+          controller: 'calligraphy/rails/web_dav_requests',
+          action: 'invoke_method',
+          resource: 'thirteen'
+        )
+      end
+    end
   end
 end

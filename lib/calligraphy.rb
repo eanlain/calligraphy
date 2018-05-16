@@ -24,6 +24,7 @@ require 'calligraphy/web_dav_request/propfind'
 require 'calligraphy/web_dav_request/proppatch'
 require 'calligraphy/web_dav_request/put'
 require 'calligraphy/web_dav_request/unlock'
+require 'calligraphy/web_dav_request/acl'
 
 #:nodoc:
 module Calligraphy
@@ -43,7 +44,7 @@ module Calligraphy
   mattr_accessor :allowed_http_methods
   @@allowed_http_methods = %w[
     options get put delete copy move
-    mkcol propfind proppatch lock unlock
+    mkcol propfind proppatch lock unlock acl
   ]
 
   # Proc responsible for returning the user's password, API key,
@@ -70,7 +71,7 @@ module Calligraphy
   mattr_accessor :web_dav_actions
   @@web_dav_actions = %i[
     options get put delete copy move
-    mkcol propfind proppatch lock unlock
+    mkcol propfind proppatch lock unlock acl
   ]
 
   # Default way to set up Calligraphy.

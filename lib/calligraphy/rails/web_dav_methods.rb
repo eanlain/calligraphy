@@ -67,6 +67,10 @@ module Calligraphy
       def unlock
         Calligraphy::Unlock.new(web_dav_request).execute
       end
+
+      def acl
+        Calligraphy::Acl.new(web_dav_request).execute
+      end
     end
   end
 end

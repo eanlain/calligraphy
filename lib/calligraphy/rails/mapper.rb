@@ -5,6 +5,13 @@ module ActionDispatch
     class Mapper
       #:nodoc:
       module HttpHelpers
+        # Define a Calligraphy route that only recognizes HTTP ACL.
+        #   acl 'bacon', to: 'food#bacon'
+        def acl(*args, &block)
+          args = web_dav_args args
+          map_method :acl, args, &block
+        end
+
         # Define a Calligraphy route that only recognizes HTTP COPY.
         #   copy 'bacon', to: 'food#bacon'
         def copy(*args, &block)
@@ -137,6 +144,7 @@ module ActionDispatch
         #     PROPPATCH /photos/*resource
         #     LOCK      /photos/*resource
         #     UNLOCK    /photos/*resource
+        #     ACL       /photos/*resource
         def calligraphy_resource(*resources, &block)
           options = resources.extract_options!.dup
 

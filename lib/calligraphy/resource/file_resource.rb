@@ -596,11 +596,6 @@ module Calligraphy
       prop
     end
 
-    # def include(prop)
-    #   # TODO: Implement
-    #   prop
-    # end
-
     def lockdiscovery(prop)
       prop.content = fetch_lock_info
       prop

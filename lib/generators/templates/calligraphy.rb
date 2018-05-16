@@ -5,7 +5,7 @@ Calligraphy.configure do |config|
   # HTTP verbs and URLs and WebDAV controller actions.
   # config.web_dav_actions = [
   #   :options, :get, :put, :delete, :copy, :move,
-  #   :mkcol, :propfind, :proppatch, :lock, :unlock
+  #   :mkcol, :propfind, :proppatch, :lock, :unlock, :acl
   # ]
 
   # HTTP methods allowed by the WebDavRequests controller.
@@ -15,7 +15,7 @@ Calligraphy.configure do |config|
   # HTTP 405 (Method Not Allowed) response.
   # config.allowed_http_methods = %w(
   #   options get put delete copy move
-  #   mkcol propfind proppatch lock unlock
+  #   mkcol propfind proppatch lock unlock acl
   # )
 
   # If Digest Authentication is enabled by default. False by default.
