@@ -18,11 +18,11 @@ Gem::Specification.new do |s|
 
   s.files = Dir['lib/**/*', 'LICENSE', 'README.md']
 
-  s.add_dependency 'rails', '~> 5.0', '>= 5.0'
+  s.add_dependency 'rails', '~> 6.0', '>= 5.1.6.2'
 
-  s.add_development_dependency 'puma', '~> 3.11.0', '>= 3.11.0'
-  s.add_development_dependency 'rake', '~> 12.3.0', '>= 12.3.0'
-  s.add_development_dependency 'rspec-rails', '~> 3.7.2', '>= 3.7.2'
-  s.add_development_dependency 'rubocop', '~> 0.52.1'
-  s.add_development_dependency 'sqlite3', '~> 1.3.13', '>= 1.3.13'
+  s.add_development_dependency 'puma', '~> 4.1.0'
+  s.add_development_dependency 'rake', '~> 12.3.3'
+  s.add_development_dependency 'rspec-rails', '~> 3.7.2'
+  s.add_development_dependency 'rubocop', '~> 0.74.0'
+  s.add_development_dependency 'sqlite3', '~> 1.4.1'
 end
