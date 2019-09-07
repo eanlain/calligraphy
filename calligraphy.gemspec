@@ -8,13 +8,13 @@ require 'calligraphy/version'
 Gem::Specification.new do |s|
   s.name        = 'calligraphy'
   s.version     = Calligraphy::VERSION
-  s.summary     = 'WebDAV framework and extension for Rails 5'
+  s.summary     = 'WebDAV framework and extension for Rails'
   s.author      = 'Brandon Robins'
   s.email       = 'brandon@onebnottwo.com'
   s.homepage    = 'http://www.github.com/eanlain/calligraphy'
   s.license     = 'MIT'
 
-  s.required_ruby_version = '>= 2.3.0'
+  s.required_ruby_version = '>= 2.5.0'
 
   s.files = Dir['lib/**/*', 'LICENSE', 'README.md']
 
