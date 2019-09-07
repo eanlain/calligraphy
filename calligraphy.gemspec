@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
 
   s.files = Dir['lib/**/*', 'LICENSE', 'README.md']
 
-  s.add_dependency 'rails', '~> 6.0', '>= 5.1.6.2'
+  s.add_dependency 'rails', '>= 5.1.6.2'
 
   s.add_development_dependency 'puma', '~> 4.1.0'
   s.add_development_dependency 'rake', '~> 12.3.3'
